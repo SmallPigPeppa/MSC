@@ -1,6 +1,5 @@
 from args import parse_args
 import torchmetrics
-import argparse
 import torch
 from torch import nn
 import torchvision
@@ -9,6 +8,7 @@ from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
+from torch.optim.lr_scheduler import StepLR
 
 
 class ResNet50(LightningModule):
@@ -51,7 +51,7 @@ class ResNet50(LightningModule):
             warmup_start_lr=0.01 * self.learning_rate,
             eta_min=0.01 * self.learning_rate,
         )
-        scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
+        scheduler = StepLR(optimizer, step_size=30, gamma=0.1)
         return [optimizer], [scheduler]
 
     def train_dataloader(self):
