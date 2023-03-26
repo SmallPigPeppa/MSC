@@ -14,7 +14,7 @@ def parse_args():
     parser.add_argument("--num_gpus", type=int, default=8, help="Number of GPUs to use")
     parser.add_argument("--num_workers", type=int, default=8, help="Number of workers for data loading")
     parser.add_argument("--max_epochs", type=int, default=90, help="Maximum number of training epochs")
-    parser.add_argument("--dataset_path", type=str, default="./mnt/mmtech01/dataset/lzy/ILSVRC2012", help="Path to the ImageNet dataset")
+    parser.add_argument("--dataset_path", type=str, default="/mnt/mmtech01/dataset/lzy/ILSVRC2012", help="Path to the ImageNet dataset")
     parser.add_argument("--eval_every", type=int, default=5, help="Evaluate the model every N epochs")
 
     args = parser.parse_args()
