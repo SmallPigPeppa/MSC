@@ -45,13 +45,13 @@ class ResNet50(LightningModule):
 
     def configure_optimizers(self):
         optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
-        scheduler = LinearWarmupCosineAnnealingLR(
-            optimizer,
-            warmup_epochs=5,
-            max_epochs=args.max_epochs,
-            warmup_start_lr=0.01 * self.learning_rate,
-            eta_min=0.01 * self.learning_rate,
-        )
+        # scheduler = LinearWarmupCosineAnnealingLR(
+        #     optimizer,
+        #     warmup_epochs=5,
+        #     max_epochs=args.max_epochs,
+        #     warmup_start_lr=0.01 * self.learning_rate,
+        #     eta_min=0.01 * self.learning_rate,
+        # )
         scheduler = StepLR(optimizer, step_size=30, gamma=0.1)
         return [optimizer], [scheduler]
 
