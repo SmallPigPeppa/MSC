@@ -1,4 +1,4 @@
-from args import parse_args
+import os
 import torchmetrics
 import torch
 from torch import nn
@@ -9,6 +9,7 @@ from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 from torch.optim.lr_scheduler import StepLR
+from args import parse_args
 
 
 class ResNet50(LightningModule):
@@ -61,7 +62,7 @@ class ResNet50(LightningModule):
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
-        dataset = torchvision.datasets.ImageNet(root=self.dataset_path, split='train', transform=transform)
+        dataset = torchvision.datasets.ImageFolder(os.path.join(self.dataset_path, "train"), transform=transform)
         return torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, num_workers=8, pin_memory=True)
 
     def val_dataloader(self):
@@ -71,7 +72,7 @@ class ResNet50(LightningModule):
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
-        dataset = torchvision.datasets.ImageNet(root=self.dataset_path, split='val', transform=transform)
+        dataset = torchvision.datasets.ImageFolder(os.path.join(self.dataset_path, "val"), transform=transform)
         return torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, num_workers=8, pin_memory=True)
 
 
