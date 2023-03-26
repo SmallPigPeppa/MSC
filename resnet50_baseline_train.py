@@ -52,7 +52,7 @@ class ResNet50(LightningModule):
             warmup_start_lr=0.01 * self.learning_rate,
             eta_min=0.01 * self.learning_rate,
         )
-        scheduler = StepLR(optimizer, step_size=30, gamma=0.1)
+        # scheduler = StepLR(optimizer, step_size=30, gamma=0.1)
         return [optimizer], [scheduler]
 
     def train_dataloader(self):
