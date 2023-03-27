@@ -4,6 +4,7 @@ import torch
 from torch import nn
 import torchvision
 import torchvision.transforms as transforms
+from torchvision.transforms.functional import InterpolationMode
 from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
