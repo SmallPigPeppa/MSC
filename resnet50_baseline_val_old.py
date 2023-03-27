@@ -90,7 +90,7 @@ def test_resolutions(model, dataset_path, resolutions, wandb_table):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--checkpoint_path", type=str,
-                        default='checkpoints/resnet50-baseline/epoch=89-step=112680.ckpt',
+                        default='/mnt/mmtech01/usr/liuwenzhuo/code/multi-scale/supervised-ckpt/supervised-baseline.ckpt',
                         help="Path to the trained model checkpoint")
     parser.add_argument("--dataset_path", type=str, default="/mnt/mmtech01/dataset/lzy/ILSVRC2012",
                         help="Path to the ImageNet dataset")
@@ -98,7 +98,7 @@ if __name__ == "__main__":
                         help="Name of the Weights & Biases project")
     parser.add_argument("--entity", type=str, default="pigpeppa",
                         help="Name of the Weights & Biases entity (team or user)")
-    parser.add_argument("--run_name", type=str, default="resnet50", help="Name of the Weights & Biases run")
+    parser.add_argument("--run_name", type=str, default="resnet50-old", help="Name of the Weights & Biases run")
 
     args = parser.parse_args()
 
@@ -107,7 +107,7 @@ if __name__ == "__main__":
 
     model = BaselineNetPL.load_from_checkpoint(args.checkpoint_path).encoder
 
-    resolutions = list(range(32, 225, 16))
+    resolutions = list(range(224, 225, 16))
     res_list, acc_list = test_resolutions(model, args.dataset_path, resolutions, wandb_table)
 
     wandb.log({"Resolution": res_list, "Accuracy": acc_list})
