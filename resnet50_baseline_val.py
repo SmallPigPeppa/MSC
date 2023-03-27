@@ -8,6 +8,8 @@ import torchmetrics
 from resnet50_baseline_train import ResNet50
 import torch.nn.functional as F
 from tqdm import tqdm
+
+
 def test_resolutions(model, dataset_path, resolutions, wandb_table):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
@@ -22,6 +24,8 @@ def test_resolutions(model, dataset_path, resolutions, wandb_table):
     ])
     dataset = torchvision.datasets.ImageFolder(os.path.join(dataset_path, "val"), transform=transform)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=64, num_workers=8, pin_memory=True)
+    res_list = []
+    acc_list = []
     for res in resolutions:
         correct = 0
         total = 0
@@ -37,27 +41,35 @@ def test_resolutions(model, dataset_path, resolutions, wandb_table):
                 total += inputs.size(0)
 
         mean_acc = correct / total
-        wandb_table.add_data(res, mean_acc)
+        res_list.append(res)
+        acc_list.append(mean_acc)
         print(f"Resolution: {res}, Accuracy: {mean_acc}")
+
+    return res_list, acc_list
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--checkpoint_path", type=str,default='checkpoints/resnet50-baseline/epoch=89-step=112680.ckpt', help="Path to the trained model checkpoint")
-    parser.add_argument("--dataset_path", type=str, default="/mnt/mmtech01/dataset/lzy/ILSVRC2012", help="Path to the ImageNet dataset")
-    parser.add_argument("--project", type=str, default="Multi-scale-CNN val", help="Name of the Weights & Biases project")
-    parser.add_argument("--entity", type=str, default="pigpeppa", help="Name of the Weights & Biases entity (team or user)")
+    parser.add_argument("--checkpoint_path", type=str,
+                        default='checkpoints/resnet50-baseline/epoch=89-step=112680.ckpt',
+                        help="Path to the trained model checkpoint")
+    parser.add_argument("--dataset_path", type=str, default="/mnt/mmtech01/dataset/lzy/ILSVRC2012",
+                        help="Path to the ImageNet dataset")
+    parser.add_argument("--project", type=str, default="Multi-scale-CNN val",
+                        help="Name of the Weights & Biases project")
+    parser.add_argument("--entity", type=str, default="pigpeppa",
+                        help="Name of the Weights & Biases entity (team or user)")
     parser.add_argument("--run_name", type=str, default="resnet50", help="Name of the Weights & Biases run")
 
     args = parser.parse_args()
 
-    wandb.init(name=args.run_name,project=args.project, entity=args.entity)
+    wandb.init(name=args.run_name, project=args.project, entity=args.entity)
     wandb_table = wandb.Table(columns=["Resolution", "Accuracy"])
 
     model = ResNet50.load_from_checkpoint(args.checkpoint_path)
 
     resolutions = list(range(32, 225, 16))
-    test_resolutions(model, args.dataset_path, resolutions, wandb_table)
+    res_list, acc_list = test_resolutions(model, args.dataset_path, resolutions, wandb_table)
 
-    wandb.log({"Accuracy per Resolution": wandb_table})
+    wandb.log({"Resolution": res_list, "Accuracy": acc_list})
     wandb.finish()
