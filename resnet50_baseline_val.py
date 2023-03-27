@@ -7,6 +7,7 @@ import wandb
 import torchmetrics
 from resnet50_baseline_train import ResNet50
 import torch.nn.functional as F
+from tqdm import tqdm
 def test_resolutions(model, dataset_path, resolutions, wandb_table):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
@@ -25,7 +26,7 @@ def test_resolutions(model, dataset_path, resolutions, wandb_table):
         correct = 0
         total = 0
         with torch.no_grad():
-            for batch in dataloader:
+            for batch in tqdm(dataloader):
                 inputs, targets = batch
                 inputs = F.interpolate(inputs, size=int(res), mode='bilinear')
                 inputs = F.interpolate(inputs, size=int(224), mode='bilinear')
