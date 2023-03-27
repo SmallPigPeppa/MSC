@@ -34,18 +34,18 @@ class MultiScaleNet(nn.Module):
             nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),resnet50(pretrained=False).layer1,resnet50(pretrained=False).layer2
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),torchvision.models.resnet50(pretrained=False).layer1,torchvision.models.resnet50(pretrained=False).layer2
         )
         self.mid_net = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=5, stride=1, padding=2, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),resnet50(pretrained=False).layer1,resnet50(pretrained=False).layer2
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),torchvision.models.resnet50(pretrained=False).layer1,torchvision.models.resnet50(pretrained=False).layer2
         )
         self.small_net = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=2, bias=False),
             nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True),resnet50(pretrained=False).layer1,resnet50(pretrained=False).layer2
+            nn.ReLU(inplace=True),torchvision.models.resnet50(pretrained=False).layer1,torchvision.models.resnet50(pretrained=False).layer2
         )
         self.unified_net = unified_net()
         self.small_size = (32, 32)
