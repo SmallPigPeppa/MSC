@@ -15,6 +15,27 @@ from args import parse_args
 import torch.nn.functional as F
 
 
+class MultiScaleNet(nn.Module):
+    def __init__(self):
+        super(MultiScaleNet, self).__init__()
+        self.u_net = torchvision.models.resnet50(pretrained=False)
+        self.small_size = (32, 32)
+        self.mid_size = (128, 128)
+        self.large_size = (224, 224)
+
+    def forward(self, x):
+        small_imgs = F.interpolate(x, size=self.small_size, mode='bilinear')
+        mid_imgs = F.interpolate(x, size=self.mid_size, mode='bilinear')
+        large_imgs = F.interpolate(x, size=self.large_size, mode='bilinear')
+
+        small_imgs = F.interpolate(small_imgs, size=self.large_size, mode='bilinear')
+        mid_imgs = F.interpolate(mid_imgs, size=self.large_size, mode='bilinear')
+
+        y1 = self.u_net(small_imgs)
+        y2 = self.u_net(mid_imgs)
+        y3 = self.u_net(large_imgs)
+
+        return y1, y2, y3
 
 class ResNet50(LightningModule):
     def __init__(self, max_epochs: int, learning_rate: float, batch_size: int, weight_decay: float, dataset_path: str):
@@ -34,18 +55,7 @@ class ResNet50(LightningModule):
 
 
     def forward(self,x):
-        small_imgs = F.interpolate(x, size=self.small_size, mode='bilinear')
-        mid_imgs = F.interpolate(x, size=self.mid_size, mode='bilinear')
-        large_imgs = F.interpolate(x, size=self.large_size, mode='bilinear')
-
-        small_imgs = F.interpolate(small_imgs, size=self.large_size, mode='bilinear')
-        mid_imgs = F.interpolate(mid_imgs, size=self.large_size, mode='bilinear')
-
-        y1 = self.model(small_imgs)
-        y2 = self.model(mid_imgs)
-        y3 = self.model(large_imgs)
-
-        return y1, y2, y3
+        return self.model(x)
 
     def training_step(self, batch, batch_idx):
         x, y = batch
