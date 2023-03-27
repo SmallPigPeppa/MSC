@@ -5,15 +5,12 @@ import torchvision
 import torchvision.transforms as transforms
 import wandb
 import torchmetrics
-from resnet50_baseline_train import ResNet50
-import torch.nn.functional as F
 from tqdm import tqdm
 
 from torchvision.models import resnet50
 import torch
 import torch.nn as nn
 import pytorch_lightning as pl
-from torch import optim
 import torch.nn.functional as F
 
 class BaselineNet(nn.Module):
