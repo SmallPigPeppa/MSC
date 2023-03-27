@@ -4,9 +4,11 @@ import torch
 from torch import nn
 import torchvision
 import torchvision.transforms as transforms
+from torchvision.transforms.functional import InterpolationMode
 from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
+
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 from torch.optim.lr_scheduler import StepLR
 from args import parse_args
@@ -56,9 +58,11 @@ class ResNet50(LightningModule):
         return [optimizer], [scheduler]
 
     def train_dataloader(self):
+        hflip_prob=0.5
+        interpolation=InterpolationMode.BILINEAR
         transform = transforms.Compose([
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
+            transforms.RandomResizedCrop(224, interpolation=interpolation),
+            transforms.RandomHorizontalFlip(hflip_prob),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
@@ -66,8 +70,9 @@ class ResNet50(LightningModule):
         return torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, num_workers=8, pin_memory=True)
 
     def val_dataloader(self):
+        interpolation=InterpolationMode.BILINEAR
         transform = transforms.Compose([
-            transforms.Resize(256),
+            transforms.Resize(256,interpolation=interpolation),
             transforms.CenterCrop(224),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
