@@ -5,6 +5,7 @@ from torch import nn
 import torchvision
 import torchvision.transforms as transforms
 from torchvision.transforms.functional import InterpolationMode
+import pytorch_lightning as pl
 from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
@@ -12,6 +13,7 @@ from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 from torch.optim.lr_scheduler import StepLR
 from args import parse_args
 import torch.nn.functional as F
+
 
 
 class ResNet50(LightningModule):
@@ -100,6 +102,7 @@ class ResNet50(LightningModule):
 
 if __name__ == "__main__":
     args = parse_args()
+    pl.seed_everything(5)
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
     checkpoint_callback = ModelCheckpoint(monitor="val_loss", mode="min", dirpath=args.checkpoint_dir, save_top_k=1)
     wandb_logger = WandbLogger(name=args.run_name, project=args.project, entity=args.entity, offline=args.offline)
