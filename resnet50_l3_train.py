@@ -189,10 +189,12 @@ if __name__ == "__main__":
         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
                                              callbacks=[checkpoint_callback, lr_monitor],
                                              resume_from_checkpoint=args.resume_from_checkpoint, gradient_clip_val=0.5,
+                                             precision=16,
                                              check_val_every_n_epoch=args.eval_every)
     else:
         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
                                              callbacks=[checkpoint_callback, lr_monitor], gradient_clip_val=0.5,
+                                             precision=16,
                                              check_val_every_n_epoch=args.eval_every)
 
     trainer.fit(model)
