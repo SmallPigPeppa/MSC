@@ -15,6 +15,59 @@ from args import parse_args
 import torch.nn.functional as F
 
 
+def unified_net():
+    u_net = torchvision.models.resnet50(pretrained=False)
+    u_net.conv1 = nn.Identity()
+    u_net.bn1 = nn.Identity()
+    u_net.relu = nn.Identity()
+    u_net.maxpool = nn.Identity()
+    return u_net
+
+
+class MultiScaleNet(nn.Module):
+    def __init__(self):
+        super(MultiScaleNet, self).__init__()
+        self.large_net = nn.Sequential(
+            nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        )
+        self.mid_net = nn.Sequential(
+            nn.Conv2d(3, 64, kernel_size=5, stride=1, padding=2, bias=False),
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        )
+        self.small_net = nn.Sequential(
+            nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=2, bias=False),
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+        )
+        self.unified_net = unified_net()
+        self.small_size = (32, 32)
+        self.mid_size = (128, 128)
+        self.large_size = (224, 224)
+        self.unified_size = (56, 56)
+
+    def forward(self, imgs):
+        small_imgs = F.interpolate(imgs, size=self.small_size, mode='bilinear')
+        mid_imgs = F.interpolate(imgs, size=self.mid_size, mode='bilinear')
+        large_imgs = F.interpolate(imgs, size=self.large_size, mode='bilinear')
+
+        z1 = self.small_net(small_imgs)
+        z2 = self.mid_net(mid_imgs)
+        z3 = self.large_net(large_imgs)
+
+        z1 = F.interpolate(z1, size=self.unified_size, mode='bilinear')
+        z2 = F.interpolate(z2, size=self.unified_size, mode='bilinear')
+
+        y1 = self.unified_net(z1)
+        y2 = self.unified_net(z2)
+        y3 = self.unified_net(z3)
+
+        return z1, z2, z3, y1, y2, y3
+
 
 class ResNet50(LightningModule):
     def __init__(self, max_epochs: int, learning_rate: float, batch_size: int, weight_decay: float, dataset_path: str):
@@ -24,14 +77,13 @@ class ResNet50(LightningModule):
         self.batch_size = batch_size
         self.weight_decay = weight_decay
         self.dataset_path = dataset_path
-        self.model = torchvision.models.resnet50(pretrained=False)
-        self.criterion = nn.CrossEntropyLoss()
+        self.model = MultiScaleNet()
+        self.ce_loss = nn.CrossEntropyLoss()
+        self.mse_loss = nn.MSELoss()
         self.train_acc = torchmetrics.Accuracy()
         self.val_acc = torchmetrics.Accuracy()
 
     def forward(self, x):
-        return self.model(x)
-    def multi_forward(self,x):
         small_imgs = F.interpolate(x, size=self.small_size, mode='bilinear')
         mid_imgs = F.interpolate(x, size=self.mid_size, mode='bilinear')
         large_imgs = F.interpolate(x, size=self.large_size, mode='bilinear')
@@ -39,30 +91,64 @@ class ResNet50(LightningModule):
         small_imgs = F.interpolate(small_imgs, size=self.large_size, mode='bilinear')
         mid_imgs = F.interpolate(mid_imgs, size=self.large_size, mode='bilinear')
 
-        y1 = self.resnet(small_imgs)
-        y2 = self.resnet(mid_imgs)
-        y3 = self.resnet(large_imgs)
+        y1 = self.model(small_imgs)
+        y2 = self.model(mid_imgs)
+        y3 = self.model(large_imgs)
 
         return y1, y2, y3
 
-    def training_step(self, batch, batch_idx):
+    def share_step(self, batch, batch_idx):
         x, y = batch
-        y_hat1,y_hat2,y_hat3 = self(x)
-        loss = self.criterion(y_hat3, y)
-        self.log("train_loss", loss)
-        self.log("train_acc1", self.train_acc(y_hat1, y), on_epoch=True)
-        self.log("train_acc2", self.train_acc(y_hat2, y), on_epoch=True)
-        self.log("train_acc3", self.train_acc(y_hat3, y), on_epoch=True)
-        return loss
+        z1, z2, z3, y_hat1, y_hat2, y_hat3 = self(x)
+
+        ce_loss1 = self.ce_loss(y_hat1, y)
+        ce_loss2 = self.ce_loss(y_hat2, y)
+        ce_loss3 = self.ce_loss(y_hat3, y)
+
+        si_loss1 = self.mse_loss(z1, z2)
+        si_loss2 = self.mse_loss(z1, z3)
+        si_loss3 = self.mse_loss(z2, z3)
+
+        if si_loss1 < 0.01:
+            si_loss1 = 0
+
+        if si_loss2 < 0.01:
+            si_loss2 = 0
+
+        if si_loss3 < 0.01:
+            si_loss3 = 0
+
+        total_loss = si_loss1 + si_loss2 + si_loss3 + ce_loss1 + ce_loss2 + ce_loss3
+
+        acc1 = self.train_acc(y_hat1, y)
+        acc2 = self.train_acc(y_hat2, y)
+        acc3 = self.train_acc(y_hat3, y)
+
+        result_dict = {
+            "si_loss1": si_loss1,
+            "si_loss2": si_loss2,
+            "si_loss3": si_loss3,
+            "ce_loss1": ce_loss1,
+            "ce_loss2": ce_loss2,
+            "ce_loss3": ce_loss3,
+            "total_loss": total_loss,
+            "acc1": acc1,
+            "acc2": acc2,
+            "acc3": acc3,
+        }
+        return result_dict
+
+    def training_step(self, batch, batch_idx):
+        result_dict = self.share_step(batch, batch_idx)
+        train_result_dict = {f'train_{k}': v for k, v in result_dict.items()}
+        self.log_dict(train_result_dict, on_epoch=True)
+        return result_dict['total_loss']
 
     def validation_step(self, batch, batch_idx):
-        x, y = batch
-        y_hat1, y_hat2, y_hat3 = self(x)
-        loss = self.criterion(y_hat3, y)
-        self.log("val_loss", loss)
-        self.log("val_acc1", self.val_acc(y_hat1, y), on_epoch=True)
-        self.log("val_acc2", self.val_acc(y_hat2, y), on_epoch=True)
-        self.log("val_acc3", self.val_acc(y_hat3, y), on_epoch=True)
+        result_dict = self.share_step(batch, batch_idx)
+        val_result_dict = {f'val_{k}': v for k, v in result_dict.items()}
+        self.log_dict(val_result_dict,on_epoch=True)
+        return val_result_dict
 
     def configure_optimizers(self):
         optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
