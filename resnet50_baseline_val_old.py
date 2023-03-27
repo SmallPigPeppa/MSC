@@ -102,10 +102,10 @@ if __name__ == "__main__":
     wandb.init(name=args.run_name, project=args.project, entity=args.entity)
     wandb_table = wandb.Table(columns=["Resolution", "Accuracy"])
 
-    model = BaselineNetPL.load_from_checkpoint(args.checkpoint_path).encoder
+    model = BaselineNetPL.load_from_checkpoint(args.checkpoint_path,args=None).encoder
 
     resolutions = list(range(224, 225, 16))
-    res_list, acc_list = test_resolutions(model, args=None)
+    res_list, acc_list = test_resolutions(model, args.dataset_path, resolutions, wandb_table)
 
     wandb.log({"Resolution": res_list, "Accuracy": acc_list})
     wandb.finish()
