@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     model = ResNet50.load_from_checkpoint(args.checkpoint_path)
 
-    resolutions = list(range(32, 224, 32))
+    resolutions = list(range(32, 224, 16))
     test_resolutions(model, args.dataset_path, resolutions, wandb_table)
 
     wandb.log({"Accuracy per Resolution": wandb_table})
