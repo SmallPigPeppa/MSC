@@ -37,7 +37,7 @@ def test_resolutions(model, dataset_path, resolutions, wandb_table):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--checkpoint_path", type=str,default='checkpoints/resnet50-baseline/epoch=89-step=112680.ckpt', required=True, help="Path to the trained model checkpoint")
+    parser.add_argument("--checkpoint_path", type=str,default='checkpoints/resnet50-baseline/epoch=89-step=112680.ckpt', help="Path to the trained model checkpoint")
     parser.add_argument("--dataset_path", type=str, default="/mnt/mmtech01/dataset/lzy/ILSVRC2012", help="Path to the ImageNet dataset")
     parser.add_argument("--project", type=str, default="Multi-scale-CNN val", help="Name of the Weights & Biases project")
     parser.add_argument("--entity", type=str, default="pigpeppa", help="Name of the Weights & Biases entity (team or user)")
