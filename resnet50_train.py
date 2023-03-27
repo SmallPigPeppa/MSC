@@ -45,7 +45,7 @@ class ResNet50(LightningModule):
         self.batch_size = batch_size
         self.weight_decay = weight_decay
         self.dataset_path = dataset_path
-        self.model = torchvision.models.resnet50(pretrained=False)
+        self.model = MultiScaleNet()
         self.criterion = nn.CrossEntropyLoss()
         self.train_acc = torchmetrics.Accuracy()
         self.val_acc = torchmetrics.Accuracy()
