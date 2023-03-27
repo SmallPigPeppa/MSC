@@ -28,6 +28,9 @@ class ResNet50(LightningModule):
         self.criterion = nn.CrossEntropyLoss()
         self.train_acc = torchmetrics.Accuracy()
         self.val_acc = torchmetrics.Accuracy()
+        self.small_size = (32, 32)
+        self.mid_size = (128, 128)
+        self.large_size = (224, 224)
 
 
     def forward(self,x):
