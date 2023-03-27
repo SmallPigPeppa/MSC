@@ -37,14 +37,15 @@ def test_resolutions(model, dataset_path, resolutions, wandb_table):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--checkpoint_path", type=str, required=True, help="Path to the trained model checkpoint")
-    parser.add_argument("--dataset_path", type=str, default="./data", help="Path to the ImageNet dataset")
-    parser.add_argument("--project", type=str, default="ResNet50-ImageNet", help="Name of the Weights & Biases project")
-    parser.add_argument("--entity", type=str, default=None, help="Name of the Weights & Biases entity (team or user)")
+    parser.add_argument("--checkpoint_path", type=str,default='checkpoints/resnet50-baseline/epoch=89-step=112680.ckpt', required=True, help="Path to the trained model checkpoint")
+    parser.add_argument("--dataset_path", type=str, default="/mnt/mmtech01/dataset/lzy/ILSVRC2012", help="Path to the ImageNet dataset")
+    parser.add_argument("--project", type=str, default="Multi-scale-CNN val", help="Name of the Weights & Biases project")
+    parser.add_argument("--entity", type=str, default="pigpeppa", help="Name of the Weights & Biases entity (team or user)")
+    parser.add_argument("--run_name", type=str, default="resnet50", help="Name of the Weights & Biases run")
 
     args = parser.parse_args()
 
-    wandb.init(project=args.project, entity=args.entity)
+    wandb.init(name=args.run_name,project=args.project, entity=args.entity)
     wandb_table = wandb.Table(columns=["Resolution", "Accuracy"])
 
     model = ResNet50.load_from_checkpoint(args.checkpoint_path)
