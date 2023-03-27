@@ -105,7 +105,7 @@ if __name__ == "__main__":
     model = BaselineNetPL.load_from_checkpoint(args.checkpoint_path).encoder
 
     resolutions = list(range(224, 225, 16))
-    res_list, acc_list = test_resolutions(model, args.dataset_path, resolutions, wandb_table)
+    res_list, acc_list = test_resolutions(model, args=None)
 
     wandb.log({"Resolution": res_list, "Accuracy": acc_list})
     wandb.finish()
