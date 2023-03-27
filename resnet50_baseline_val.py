@@ -22,17 +22,22 @@ def test_resolutions(model, dataset_path, resolutions, wandb_table):
     dataset = torchvision.datasets.ImageFolder(os.path.join(dataset_path, "val"), transform=transform)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=64, num_workers=8, pin_memory=True)
     for res in resolutions:
+        correct = 0
+        total = 0
         with torch.no_grad():
             for batch in dataloader:
                 inputs, targets = batch
-                inputs, targets = inputs.to(device), targets.to(device)
                 inputs = F.interpolate(inputs, size=int(res), mode='bilinear')
                 inputs = F.interpolate(inputs, size=int(224), mode='bilinear')
+                inputs, targets = inputs.to(device), targets.to(device)
                 outputs = model(inputs)
                 acc = accuracy(outputs, targets)
+                correct += acc.item() * inputs.size(0)
+                total += inputs.size(0)
 
-        wandb_table.add_data(res, acc.item())
-        print(f"Resolution: {res}, Accuracy: {acc.item()}")
+        mean_acc = correct / total
+        wandb_table.add_data(res, mean_acc)
+        print(f"Resolution: {res}, Accuracy: {mean_acc}")
 
 
 if __name__ == "__main__":
