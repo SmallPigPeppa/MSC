@@ -37,6 +37,7 @@ class MultiScaleNet(nn.Module):
 
         return y1, y2, y3
 
+
 class ResNet50(LightningModule):
     def __init__(self, max_epochs: int, learning_rate: float, batch_size: int, weight_decay: float, dataset_path: str):
         super().__init__()
@@ -53,13 +54,12 @@ class ResNet50(LightningModule):
         self.mid_size = (128, 128)
         self.large_size = (224, 224)
 
-
-    def forward(self,x):
+    def forward(self, x):
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
         x, y = batch
-        y_hat1,y_hat2,y_hat3 = self(x)
+        y_hat1, y_hat2, y_hat3 = self(x)
         loss = self.criterion(y_hat3, y)
         self.log("train_loss", loss)
         self.log("train_acc1", self.train_acc(y_hat1, y), on_epoch=True)
@@ -124,10 +124,12 @@ if __name__ == "__main__":
         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
                                              callbacks=[checkpoint_callback, lr_monitor],
                                              resume_from_checkpoint=args.resume_from_checkpoint, gradient_clip_val=0.5,
+                                             precision=16,
                                              check_val_every_n_epoch=args.eval_every)
     else:
         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
                                              callbacks=[checkpoint_callback, lr_monitor], gradient_clip_val=0.5,
+                                             precision=16,
                                              check_val_every_n_epoch=args.eval_every)
 
     trainer.fit(model)
