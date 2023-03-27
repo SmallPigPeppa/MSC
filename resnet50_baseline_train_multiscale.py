@@ -11,6 +11,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 from torch.optim.lr_scheduler import StepLR
 from args import parse_args
+import torch.nn.functional as F
 
 
 class ResNet50(LightningModule):
@@ -28,21 +29,38 @@ class ResNet50(LightningModule):
 
     def forward(self, x):
         return self.model(x)
+    def multi_forward(self,x):
+        small_imgs = F.interpolate(x, size=self.small_size, mode='bilinear')
+        mid_imgs = F.interpolate(x, size=self.mid_size, mode='bilinear')
+        large_imgs = F.interpolate(x, size=self.large_size, mode='bilinear')
+
+        small_imgs = F.interpolate(small_imgs, size=self.large_size, mode='bilinear')
+        mid_imgs = F.interpolate(mid_imgs, size=self.large_size, mode='bilinear')
+
+        y1 = self.resnet(small_imgs)
+        y2 = self.resnet(mid_imgs)
+        y3 = self.resnet(large_imgs)
+
+        return y1, y2, y3
 
     def training_step(self, batch, batch_idx):
         x, y = batch
-        y_hat = self(x)
-        loss = self.criterion(y_hat, y)
+        y_hat1,y_hat2,y_hat3 = self(x)
+        loss = self.criterion(y_hat3, y)
         self.log("train_loss", loss)
-        self.log("train_acc", self.train_acc(y_hat, y), on_epoch=True)
+        self.log("train_acc1", self.train_acc(y_hat1, y), on_epoch=True)
+        self.log("train_acc2", self.train_acc(y_hat2, y), on_epoch=True)
+        self.log("train_acc3", self.train_acc(y_hat3, y), on_epoch=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
-        y_hat = self(x)
-        loss = self.criterion(y_hat, y)
+        y_hat1, y_hat2, y_hat3 = self(x)
+        loss = self.criterion(y_hat3, y)
         self.log("val_loss", loss)
-        self.log("val_acc", self.val_acc(y_hat, y), on_epoch=True)
+        self.log("val_acc1", self.val_acc(y_hat1, y), on_epoch=True)
+        self.log("val_acc2", self.val_acc(y_hat2, y), on_epoch=True)
+        self.log("val_acc3", self.val_acc(y_hat3, y), on_epoch=True)
 
     def configure_optimizers(self):
         optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
