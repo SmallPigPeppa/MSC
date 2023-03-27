@@ -14,7 +14,7 @@ from args import parse_args
 
 
 class ResNet50(LightningModule):
-    def __init__(self, max_epochs: int, learning_rate: float, batch_size: int, weight_decay: float, dataset_path: str):
+    def __init__(self, max_epochs: int=90, learning_rate: float=0.5, batch_size: int=128, weight_decay: float=1e-4, dataset_path: str='./data'):
         super().__init__()
         self.max_epochs = max_epochs
         self.learning_rate = learning_rate
