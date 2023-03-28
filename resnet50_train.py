@@ -114,7 +114,7 @@ class ResNet50(LightningModule):
 
 if __name__ == "__main__":
     args = parse_args()
-    pl.seed_everything(5)
+    pl.seed_everything(19)
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
     checkpoint_callback = ModelCheckpoint(monitor="val_loss", mode="min", dirpath=args.checkpoint_dir, save_top_k=1)
     wandb_logger = WandbLogger(name=args.run_name, project=args.project, entity=args.entity, offline=args.offline)
