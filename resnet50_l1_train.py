@@ -179,19 +179,19 @@ if __name__ == "__main__":
     args = parse_args()
     pl.seed_everything(5)
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
-    checkpoint_callback = ModelCheckpoint(monitor="val_loss", mode="min", dirpath=args.checkpoint_dir, save_top_k=1)
+    checkpoint_callback = ModelCheckpoint(monitor="val_acc3", mode="min", dirpath=args.checkpoint_dir, save_top_k=1)
     wandb_logger = WandbLogger(name=args.run_name, project=args.project, entity=args.entity, offline=args.offline)
     model = ResNet50(args.max_epochs, args.learning_rate, args.batch_size, args.weight_decay, args.dataset_path)
 
     if args.resume_from_checkpoint is not None:
         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
                                              callbacks=[checkpoint_callback, lr_monitor],
-                                             resume_from_checkpoint=args.resume_from_checkpoint, gradient_clip_val=0.5,
+                                             resume_from_checkpoint=args.resume_from_checkpoint,
                                              precision=16,
                                              check_val_every_n_epoch=args.eval_every)
     else:
         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
-                                             callbacks=[checkpoint_callback, lr_monitor], gradient_clip_val=0.5,
+                                             callbacks=[checkpoint_callback, lr_monitor],
                                              precision=16,
                                              check_val_every_n_epoch=args.eval_every)
 
