@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from tqdm import tqdm
 
 
-def test_resolutions(model, dataset_path, resolutions, wandb_table):
+def test_resolutions(model, dataset_path, resolutions):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
     model.eval()
