@@ -26,7 +26,7 @@ class MultiScaleNet(nn.Module):
     def forward(self, x):
         small_imgs = F.interpolate(x, size=self.small_size, mode='bilinear')
         mid_imgs = F.interpolate(x, size=self.mid_size, mode='bilinear')
-        large_imgs = F.interpolate(x, size=self.large_size, mode='bilinear')
+        large_imgs = x
 
         small_imgs = F.interpolate(small_imgs, size=self.large_size, mode='bilinear')
         mid_imgs = F.interpolate(mid_imgs, size=self.large_size, mode='bilinear')

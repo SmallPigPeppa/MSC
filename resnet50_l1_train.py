@@ -53,7 +53,7 @@ class MultiScaleNet(nn.Module):
     def forward(self, imgs):
         small_imgs = F.interpolate(imgs, size=self.small_size, mode='bilinear')
         mid_imgs = F.interpolate(imgs, size=self.mid_size, mode='bilinear')
-        large_imgs = F.interpolate(imgs, size=self.large_size, mode='bilinear')
+        large_imgs = imgs
 
         z1 = self.small_net(small_imgs)
         z2 = self.mid_net(mid_imgs)
@@ -136,11 +136,12 @@ class ResNet50(LightningModule):
     def validation_step(self, batch, batch_idx):
         result_dict = self.share_step(batch, batch_idx)
         val_result_dict = {f'val_{k}': v for k, v in result_dict.items()}
-        self.log_dict(val_result_dict,on_epoch=True)
+        self.log_dict(val_result_dict, on_epoch=True)
         return val_result_dict
 
     def configure_optimizers(self):
-        optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay,momentum=0.9)
+        optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay,
+                                    momentum=0.9)
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
             warmup_epochs=5,
@@ -186,12 +187,13 @@ if __name__ == "__main__":
     if args.resume_from_checkpoint is not None:
         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
                                              callbacks=[checkpoint_callback, lr_monitor],
-                                             resume_from_checkpoint=args.resume_from_checkpoint, precision=16,gradient_clip_val=1.0,
+                                             resume_from_checkpoint=args.resume_from_checkpoint, precision=16,
+                                             gradient_clip_val=1.0,
                                              check_val_every_n_epoch=args.eval_every)
     else:
         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
-                                             callbacks=[checkpoint_callback, lr_monitor], precision=16,gradient_clip_val=1.0,
+                                             callbacks=[checkpoint_callback, lr_monitor], precision=16,
+                                             gradient_clip_val=1.0,
                                              check_val_every_n_epoch=args.eval_every)
 
     trainer.fit(model)
-
