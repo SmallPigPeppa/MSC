@@ -31,9 +31,12 @@ class MultiScaleNet(nn.Module):
         small_imgs = F.interpolate(small_imgs, size=self.large_size, mode='bilinear')
         mid_imgs = F.interpolate(mid_imgs, size=self.large_size, mode='bilinear')
 
-        y1 = self.u_net(small_imgs)
-        y2 = self.u_net(mid_imgs)
         y3 = self.u_net(large_imgs)
+
+        with torch.no_grad():
+            y1 = self.u_net(small_imgs)
+            y2 = self.u_net(mid_imgs)
+
 
         return y1, y2, y3
 
@@ -50,9 +53,6 @@ class ResNet50(LightningModule):
         self.criterion = nn.CrossEntropyLoss()
         self.train_acc = torchmetrics.Accuracy()
         self.val_acc = torchmetrics.Accuracy()
-        self.small_size = (32, 32)
-        self.mid_size = (128, 128)
-        self.large_size = (224, 224)
 
     def forward(self, x):
         return self.model(x)
@@ -123,13 +123,12 @@ if __name__ == "__main__":
     if args.resume_from_checkpoint is not None:
         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
                                              callbacks=[checkpoint_callback, lr_monitor],
-                                             resume_from_checkpoint=args.resume_from_checkpoint,
-                                             precision=16,
+                                             resume_from_checkpoint=args.resume_from_checkpoint, precision=16,gradient_clip_val=1.0,
                                              check_val_every_n_epoch=args.eval_every)
     else:
         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
-                                             callbacks=[checkpoint_callback, lr_monitor],
-                                             precision=16,
+                                             callbacks=[checkpoint_callback, lr_monitor], precision=16,gradient_clip_val=1.0,
                                              check_val_every_n_epoch=args.eval_every)
 
     trainer.fit(model)
+
