@@ -77,7 +77,7 @@ class ResNet50(LightningModule):
         self.log("val_acc3", self.val_acc(y_hat3, y), on_epoch=True)
 
     def configure_optimizers(self):
-        optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
+        optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay,momentum=0.9)
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
             warmup_epochs=5,

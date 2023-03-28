@@ -45,7 +45,7 @@ class ResNet50(LightningModule):
         self.log("val_acc", self.val_acc(y_hat, y), on_epoch=True)
 
     def configure_optimizers(self):
-        optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
+        optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay,momentum=0.9)
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
             warmup_epochs=5,
@@ -90,11 +90,11 @@ if __name__ == "__main__":
     if args.resume_from_checkpoint is not None:
         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
                                              callbacks=[checkpoint_callback, lr_monitor],
-                                             resume_from_checkpoint=args.resume_from_checkpoint, gradient_clip_val=0.5,
+                                             resume_from_checkpoint=args.resume_from_checkpoint,
                                              check_val_every_n_epoch=args.eval_every)
     else:
         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
-                                             callbacks=[checkpoint_callback, lr_monitor], gradient_clip_val=0.5,
+                                             callbacks=[checkpoint_callback, lr_monitor],
                                              check_val_every_n_epoch=args.eval_every)
 
     trainer.fit(model)
