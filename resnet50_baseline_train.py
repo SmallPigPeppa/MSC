@@ -11,10 +11,11 @@ from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 from torch.optim.lr_scheduler import StepLR
 from args import parse_args
+import pytorch_lightning as pl
 
 
 class ResNet50(LightningModule):
-    def __init__(self, max_epochs: int=90, learning_rate: float=0.5, batch_size: int=128, weight_decay: float=1e-4, dataset_path: str='./data'):
+    def __init__(self, max_epochs: int, learning_rate: float, batch_size: int, weight_decay: float, dataset_path: str):
         super().__init__()
         self.max_epochs = max_epochs
         self.learning_rate = learning_rate
@@ -45,7 +46,8 @@ class ResNet50(LightningModule):
         self.log("val_acc", self.val_acc(y_hat, y), on_epoch=True)
 
     def configure_optimizers(self):
-        optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay,momentum=0.9)
+        optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay,
+                                    momentum=0.9)
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
             warmup_epochs=5,
@@ -82,6 +84,7 @@ class ResNet50(LightningModule):
 
 if __name__ == "__main__":
     args = parse_args()
+    pl.seed_everything(19)
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
     checkpoint_callback = ModelCheckpoint(monitor="val_loss", mode="min", dirpath=args.checkpoint_dir, save_top_k=1)
     wandb_logger = WandbLogger(name=args.run_name, project=args.project, entity=args.entity, offline=args.offline)
@@ -90,11 +93,11 @@ if __name__ == "__main__":
     if args.resume_from_checkpoint is not None:
         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
                                              callbacks=[checkpoint_callback, lr_monitor],
-                                             resume_from_checkpoint=args.resume_from_checkpoint,
+                                             resume_from_checkpoint=args.resume_from_checkpoint, precision=16,
                                              check_val_every_n_epoch=args.eval_every)
     else:
         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
-                                             callbacks=[checkpoint_callback, lr_monitor],
+                                             callbacks=[checkpoint_callback, lr_monitor], precision=16,
                                              check_val_every_n_epoch=args.eval_every)
 
     trainer.fit(model)
