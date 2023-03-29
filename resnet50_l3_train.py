@@ -13,11 +13,12 @@ from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 from torch.optim.lr_scheduler import StepLR
 from args import parse_args
 import torch.nn.functional as F
+from torchvision.models import resnet50
 
 
 
 def unified_net():
-    u_net = torchvision.models.resnet50(pretrained=False)
+    u_net = resnet50(pretrained=False)
     u_net.conv1 = nn.Identity()
     u_net.bn1 = nn.Identity()
     u_net.relu = nn.Identity()
@@ -34,18 +35,18 @@ class MultiScaleNet(nn.Module):
             nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),torchvision.models.resnet50(pretrained=False).layer1,torchvision.models.resnet50(pretrained=False).layer2
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),resnet50(pretrained=False).layer1,resnet50(pretrained=False).layer2
         )
         self.mid_net = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=5, stride=1, padding=2, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),torchvision.models.resnet50(pretrained=False).layer1,torchvision.models.resnet50(pretrained=False).layer2
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),resnet50(pretrained=False).layer1,resnet50(pretrained=False).layer2
         )
         self.small_net = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=2, bias=False),
             nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True),torchvision.models.resnet50(pretrained=False).layer1,torchvision.models.resnet50(pretrained=False).layer2
+            nn.ReLU(inplace=True),resnet50(pretrained=False).layer1,resnet50(pretrained=False).layer2
         )
         self.unified_net = unified_net()
         self.small_size = (32, 32)

@@ -13,6 +13,7 @@ from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 from torch.optim.lr_scheduler import StepLR
 from args import parse_args
 import torch.nn.functional as F
+from torchvision.models import resnet50
 
 
 def unified_net():
@@ -32,18 +33,18 @@ class MultiScaleNet(nn.Module):
             nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),torchvision.models.resnet50(pretrained=False).layer1
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),resnet50(pretrained=False).layer1
         )
         self.mid_net = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=5, stride=1, padding=2, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),torchvision.models.resnet50(pretrained=False).layer1
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),resnet50(pretrained=False).layer1
         )
         self.small_net = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=2, bias=False),
             nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True),torchvision.models.resnet50(pretrained=False).layer1
+            nn.ReLU(inplace=True),resnet50(pretrained=False).layer1
         )
         self.unified_net = unified_net()
         self.small_size = (32, 32)
@@ -54,7 +55,7 @@ class MultiScaleNet(nn.Module):
     def forward(self, imgs):
         small_imgs = F.interpolate(imgs, size=self.small_size, mode='bilinear')
         mid_imgs = F.interpolate(imgs, size=self.mid_size, mode='bilinear')
-        large_imgs = imgs
+        large_imgs = F.interpolate(imgs, size=self.large_size, mode='bilinear')
 
         z1 = self.small_net(small_imgs)
         z2 = self.mid_net(mid_imgs)
