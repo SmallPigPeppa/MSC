@@ -82,7 +82,7 @@ class ResNet50(LightningModule):
         return self.model(x)
 
     def share_step(self, batch, batch_idx):
-        x1, x2, x3, y = batch
+        [x1, x2, x3], y = batch
         z1, z2, z3, y_hat1, y_hat2, y_hat3 = self(x1, x2, x3)
 
         ce_loss1 = self.ce_loss(y_hat1, y)
