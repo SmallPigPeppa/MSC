@@ -5,7 +5,7 @@ import torchvision
 import torchvision.transforms as transforms
 import wandb
 import torchmetrics
-from resnet50_baseline_train import ResNet50
+from resnet50_baseline_train_clip_multi import ResNet50
 import torch.nn.functional as F
 from tqdm import tqdm
 
