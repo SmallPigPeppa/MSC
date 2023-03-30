@@ -78,11 +78,11 @@ class ResNet50(LightningModule):
         self.train_acc = torchmetrics.Accuracy()
         self.val_acc = torchmetrics.Accuracy()
 
-    def forward(self, x):
-        return self.model(x)
+    def forward(self, x1,x2,x3):
+        return self.model(x1,x2,x3)
 
     def share_step(self, batch, batch_idx):
-        [x1, x2, x3], y = batch
+        x1, x2, x3, y = batch
         z1, z2, z3, y_hat1, y_hat2, y_hat3 = self(x1, x2, x3)
 
         ce_loss1 = self.ce_loss(y_hat1, y)
