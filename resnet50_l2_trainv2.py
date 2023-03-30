@@ -47,19 +47,12 @@ class MultiScaleNet(nn.Module):
             nn.ReLU(inplace=True), resnet50(pretrained=False).layer1
         )
         self.unified_net = unified_net()
-        self.small_size = (32, 32)
-        self.mid_size = (128, 128)
-        self.large_size = (224, 224)
         self.unified_size = (56, 56)
 
-    def forward(self, imgs):
-        small_imgs = F.interpolate(imgs, size=self.small_size, mode='bilinear')
-        mid_imgs = F.interpolate(imgs, size=self.mid_size, mode='bilinear')
-        large_imgs = F.interpolate(imgs, size=self.large_size, mode='bilinear')
-
-        z1 = self.small_net(small_imgs)
-        z2 = self.mid_net(mid_imgs)
-        z3 = self.large_net(large_imgs)
+    def forward(self, x1, x2, x3):
+        z1 = self.small_net(x1)
+        z2 = self.mid_net(x2)
+        z3 = self.large_net(x3)
 
         z1 = F.interpolate(z1, size=self.unified_size, mode='bilinear')
         z2 = F.interpolate(z2, size=self.unified_size, mode='bilinear')
@@ -89,8 +82,8 @@ class ResNet50(LightningModule):
         return self.model(x)
 
     def share_step(self, batch, batch_idx):
-        x, y = batch
-        z1, z2, z3, y_hat1, y_hat2, y_hat3 = self(x)
+        x1, x2, x3, y = batch
+        z1, z2, z3, y_hat1, y_hat2, y_hat3 = self(x1, x2, x3)
 
         ce_loss1 = self.ce_loss(y_hat1, y)
         ce_loss2 = self.ce_loss(y_hat2, y)
@@ -157,23 +150,45 @@ class ResNet50(LightningModule):
     def train_dataloader(self):
         hflip_prob = 0.5
         interpolation = InterpolationMode.BILINEAR
+
+        def create_random_resized_crop(size):
+            return transforms.Compose([
+                transforms.RandomResizedCrop(size, interpolation=interpolation),
+                transforms.RandomHorizontalFlip(hflip_prob),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            ])
+
         transform = transforms.Compose([
-            transforms.RandomResizedCrop(224, interpolation=interpolation),
-            transforms.RandomHorizontalFlip(hflip_prob),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            transforms.Lambda(lambda img: (
+                create_random_resized_crop(32)(img),
+                create_random_resized_crop(128)(img),
+                create_random_resized_crop(224)(img),
+            )),
         ])
+
         dataset = torchvision.datasets.ImageFolder(os.path.join(self.dataset_path, "train"), transform=transform)
-        return torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, num_workers=8, pin_memory=True)
+        return dataset
 
     def val_dataloader(self):
         interpolation = InterpolationMode.BILINEAR
+
+        def create_val_transform(size):
+            return transforms.Compose([
+                transforms.Resize(256, interpolation=interpolation),
+                transforms.CenterCrop(size),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ])
+
         transform = transforms.Compose([
-            transforms.Resize(256, interpolation=interpolation),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            transforms.Lambda(lambda img: (
+                create_val_transform(32)(img),
+                create_val_transform(128)(img),
+                create_val_transform(224)(img),
+            )),
         ])
+
         dataset = torchvision.datasets.ImageFolder(os.path.join(self.dataset_path, "val"), transform=transform)
         return torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, num_workers=8, pin_memory=True)
 
