@@ -66,7 +66,7 @@ if __name__ == "__main__":
     wandb.init(name=args.run_name, project=args.project, entity=args.entity)
     wandb_table = wandb.Table(columns=["Resolution", "Accuracy"])
 
-    model = ResNet50.load_from_checkpoint(args.checkpoint_path)
+    model = ResNet50.load_from_checkpoint(args.checkpoint_path,max_epochs=90, learning_rate=0.5, batch_size=128, weight_decay=5e-4, dataset_path='no')
 
     resolutions = list(range(224, 225, 16))
     res_list, acc_list = test_resolutions(model, args.dataset_path, resolutions, wandb_table)
