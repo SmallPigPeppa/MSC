@@ -14,7 +14,7 @@ from torch.optim.lr_scheduler import StepLR
 from args import parse_args
 import torch.nn.functional as F
 from torchvision.models import resnet50
-
+from torchvision import transforms, datasets
 
 def unified_net():
     u_net = torchvision.models.resnet50(pretrained=False)
@@ -168,7 +168,7 @@ class ResNet50(LightningModule):
         ])
 
         dataset = torchvision.datasets.ImageFolder(os.path.join(self.dataset_path, "train"), transform=transform)
-        return dataset
+        return torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, num_workers=8, pin_memory=True)
 
     def val_dataloader(self):
         interpolation = InterpolationMode.BILINEAR
