@@ -59,7 +59,7 @@ if __name__ == "__main__":
                         help="Name of the Weights & Biases project")
     parser.add_argument("--entity", type=str, default="pigpeppa",
                         help="Name of the Weights & Biases entity (team or user)")
-    parser.add_argument("--run_name", type=str, default="resnet50", help="Name of the Weights & Biases run")
+    parser.add_argument("--run_name", type=str, default="resnet50-debug", help="Name of the Weights & Biases run")
 
     args = parser.parse_args()
 
