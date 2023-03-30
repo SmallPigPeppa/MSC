@@ -104,7 +104,7 @@ class ResNet50(LightningModule):
         if si_loss3 < 0.01:
             si_loss3 = 0
 
-        total_loss = si_loss1 + si_loss2 + si_loss3 + ce_loss1 + ce_loss2 + ce_loss3
+        total_loss = si_loss1 + si_loss2 + si_loss3 + ce_loss3
 
         acc1 = self.train_acc(y_hat1, y)
         acc2 = self.train_acc(y_hat2, y)
