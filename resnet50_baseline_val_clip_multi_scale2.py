@@ -13,7 +13,7 @@ from tqdm import tqdm
 def test_resolutions(model, dataset_path, resolutions):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
-    # model.eval()
+    model.eval()
     accuracy = torchmetrics.Accuracy().to(device)
 
     transform = transforms.Compose([
