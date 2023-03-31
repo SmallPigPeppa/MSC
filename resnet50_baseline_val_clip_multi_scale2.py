@@ -13,7 +13,7 @@ from tqdm import tqdm
 def test_resolutions(model, dataset_path, resolutions):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
-    model.train()
+    # model.eval()
     accuracy = torchmetrics.Accuracy().to(device)
 
     transform = transforms.Compose([
@@ -23,7 +23,7 @@ def test_resolutions(model, dataset_path, resolutions):
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
     dataset = torchvision.datasets.ImageFolder(os.path.join(dataset_path, "val"), transform=transform)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=64, num_workers=8, pin_memory=True)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=256, num_workers=8, pin_memory=True)
     res_list = []
     acc_list = []
     for res in resolutions:
