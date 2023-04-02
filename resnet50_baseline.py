@@ -3,29 +3,25 @@ import torchmetrics
 import torch
 from torch import nn
 import torchvision
-import torchvision.transforms as transforms
-from torchvision.transforms.functional import InterpolationMode
+import torch.nn.functional as F
 from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
-from torch.optim.lr_scheduler import StepLR
 from args import parse_args
 import pytorch_lightning as pl
+from imagenet_dali import ClassificationDALIDataModule
 
 
 class ResNet50(LightningModule):
-    def __init__(self, max_epochs: int, learning_rate: float, batch_size: int, weight_decay: float, dataset_path: str):
+    def __init__(self, max_epochs: int, learning_rate: float, weight_decay: float):
         super().__init__()
         self.max_epochs = max_epochs
         self.learning_rate = learning_rate
-        self.batch_size = batch_size
         self.weight_decay = weight_decay
-        self.dataset_path = dataset_path
         self.model = torchvision.models.resnet50(pretrained=False)
-        self.criterion = nn.CrossEntropyLoss()
-        self.train_acc = torchmetrics.Accuracy()
-        self.val_acc = torchmetrics.Accuracy()
+        self.ce_loss = nn.CrossEntropyLoss()
+        self.metrics_acc = torchmetrics.Accuracy()
 
     def forward(self, x):
         return self.model(x)
@@ -33,21 +29,42 @@ class ResNet50(LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
-        loss = self.criterion(y_hat, y)
+        loss = self.ce_loss(y_hat, y)
         self.log("train_loss", loss)
-        self.log("train_acc", self.train_acc(y_hat, y), on_epoch=True)
+        self.log("train_acc", self.metrics_acc(y_hat, y), on_epoch=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
-        y_hat = self(x)
-        loss = self.criterion(y_hat, y)
-        self.log("val_loss", loss)
-        self.log("val_acc", self.val_acc(y_hat, y), on_epoch=True)
+        x1 = F.interpolate(x, size=32, mode='bilinear')
+        x1 = F.interpolate(x1, size=224, mode='bilinear')
+
+        x2 = F.interpolate(x, size=128, mode='bilinear')
+        x2 = F.interpolate(x2, size=224, mode='bilinear')
+
+        x3 = x
+
+        y_hat1 = self(x1)
+        y_hat2 = self(x2)
+        y_hat3 = self(x3)
+
+        loss1 = self.ce_loss(y_hat1, y)
+        loss2 = self.ce_loss(y_hat2, y)
+        loss3 = self.ce_loss(y_hat3, y)
+        self.log("val_loss1", loss1)
+        self.log("val_loss2", loss2)
+        self.log("val_loss3", loss3)
+        self.log("val_acc1", self.metrics_acc(y_hat1, y), on_epoch=True)
+        self.log("val_acc2", self.metrics_acc(y_hat2, y), on_epoch=True)
+        self.log("val_acc3", self.metrics_acc(y_hat3, y), on_epoch=True)
 
     def configure_optimizers(self):
-        optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay,
-                                    momentum=0.9)
+        optimizer = torch.optim.SGD(
+            self.parameters(),
+            lr=self.learning_rate,
+            weight_decay=self.weight_decay,
+            momentum=0.9
+        )
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
             warmup_epochs=5,
@@ -55,31 +72,7 @@ class ResNet50(LightningModule):
             warmup_start_lr=0.01 * self.learning_rate,
             eta_min=0.01 * self.learning_rate,
         )
-        # scheduler = StepLR(optimizer, step_size=30, gamma=0.1)
         return [optimizer], [scheduler]
-
-    def train_dataloader(self):
-        hflip_prob = 0.5
-        interpolation = InterpolationMode.BILINEAR
-        transform = transforms.Compose([
-            transforms.RandomResizedCrop(224, interpolation=interpolation),
-            transforms.RandomHorizontalFlip(hflip_prob),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
-        dataset = torchvision.datasets.ImageFolder(os.path.join(self.dataset_path, "train"), transform=transform)
-        return torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, num_workers=8, pin_memory=True)
-
-    def val_dataloader(self):
-        interpolation = InterpolationMode.BILINEAR
-        transform = transforms.Compose([
-            transforms.Resize(256, interpolation=interpolation),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
-        dataset = torchvision.datasets.ImageFolder(os.path.join(self.dataset_path, "val"), transform=transform)
-        return torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, num_workers=8, pin_memory=True)
 
 
 if __name__ == "__main__":
@@ -88,9 +81,10 @@ if __name__ == "__main__":
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
     checkpoint_callback = ModelCheckpoint(monitor="val_loss", mode="min", dirpath=args.checkpoint_dir, save_top_k=1)
     wandb_logger = WandbLogger(name=args.run_name, project=args.project, entity=args.entity, offline=args.offline)
-    model = ResNet50(args.max_epochs, args.learning_rate, args.batch_size, args.weight_decay, args.dataset_path)
+    model = ResNet50(args.max_epochs, args.learning_rate, args.weight_decay)
 
     if args.resume_from_checkpoint is not None:
+        # gradient_clip_val = 1.0,
         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
                                              callbacks=[checkpoint_callback, lr_monitor],
                                              resume_from_checkpoint=args.resume_from_checkpoint, precision=16,
@@ -100,4 +94,26 @@ if __name__ == "__main__":
                                              callbacks=[checkpoint_callback, lr_monitor], precision=16,
                                              check_val_every_n_epoch=args.eval_every)
 
-    trainer.fit(model)
+    try:
+        from pytorch_lightning.loops import FitLoop
+
+
+        class WorkaroundFitLoop(FitLoop):
+            @property
+            def prefetch_batches(self) -> int:
+                return 1
+
+
+        trainer.fit_loop = WorkaroundFitLoop(
+            trainer.fit_loop.min_epochs, trainer.fit_loop.max_epochs
+        )
+    except:
+        pass
+
+    dali_datamodule = ClassificationDALIDataModule(
+        train_data_path=os.path.join(args.dataset_path, 'train'),
+        val_data_path=os.path.join(args.dataset_path, 'val'),
+        num_workers=args.num_workers,
+        batch_size=args.batch_size)
+
+    trainer.fit(model, datamodule=dali_datamodule)
