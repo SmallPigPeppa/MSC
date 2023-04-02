@@ -3,21 +3,19 @@ import torchmetrics
 import torch
 from torch import nn
 import torchvision
-import torchvision.transforms as transforms
-from torchvision.transforms.functional import InterpolationMode
-import pytorch_lightning as pl
+import torch.nn.functional as F
 from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
-from torch.optim.lr_scheduler import StepLR
 from args import parse_args
-import torch.nn.functional as F
+import pytorch_lightning as pl
+from imagenet_dali import ClassificationDALIDataModule
 from torchvision.models import resnet50
 
 
 def unified_net():
-    u_net = torchvision.models.resnet50(pretrained=False)
+    u_net = resnet50(pretrained=False)
     u_net.conv1 = nn.Identity()
     u_net.bn1 = nn.Identity()
     u_net.relu = nn.Identity()
@@ -26,25 +24,25 @@ def unified_net():
     return u_net
 
 
-class MultiScaleNet(nn.Module):
+class ResNet50_L2(nn.Module):
     def __init__(self):
-        super(MultiScaleNet, self).__init__()
+        super().__init__()
         self.large_net = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),resnet50(pretrained=False).layer1
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1), resnet50(pretrained=False).layer1
         )
         self.mid_net = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=5, stride=1, padding=2, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),resnet50(pretrained=False).layer1
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1), resnet50(pretrained=False).layer1
         )
         self.small_net = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=2, bias=False),
             nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True),resnet50(pretrained=False).layer1
+            nn.ReLU(inplace=True), resnet50(pretrained=False).layer1
         )
         self.unified_net = unified_net()
         self.small_size = (32, 32)
@@ -72,18 +70,13 @@ class MultiScaleNet(nn.Module):
 
 
 class ResNet50(LightningModule):
-    def __init__(self, max_epochs: int, learning_rate: float, batch_size: int, weight_decay: float, dataset_path: str):
+    def __init__(self, args):
         super().__init__()
-        self.max_epochs = max_epochs
-        self.learning_rate = learning_rate
-        self.batch_size = batch_size
-        self.weight_decay = weight_decay
-        self.dataset_path = dataset_path
-        self.model = MultiScaleNet()
+        self.args = args
+        self.model = ResNet50_L2()
         self.ce_loss = nn.CrossEntropyLoss()
         self.mse_loss = nn.MSELoss()
-        self.train_acc = torchmetrics.Accuracy()
-        self.val_acc = torchmetrics.Accuracy()
+        self.metrics_acc = torchmetrics.Accuracy()
 
     def forward(self, x):
         return self.model(x)
@@ -111,9 +104,9 @@ class ResNet50(LightningModule):
 
         total_loss = si_loss1 + si_loss2 + si_loss3 + ce_loss1 + ce_loss2 + ce_loss3
 
-        acc1 = self.train_acc(y_hat1, y)
-        acc2 = self.train_acc(y_hat2, y)
-        acc3 = self.train_acc(y_hat3, y)
+        acc1 = self.metrics_acc(y_hat1, y)
+        acc2 = self.metrics_acc(y_hat2, y)
+        acc3 = self.metrics_acc(y_hat3, y)
 
         result_dict = {
             "si_loss1": si_loss1,
@@ -138,44 +131,27 @@ class ResNet50(LightningModule):
     def validation_step(self, batch, batch_idx):
         result_dict = self.share_step(batch, batch_idx)
         val_result_dict = {f'val_{k}': v for k, v in result_dict.items()}
-        self.log_dict(val_result_dict,on_epoch=True)
+        self.log_dict(val_result_dict, on_epoch=True)
         return val_result_dict
 
     def configure_optimizers(self):
-        optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay,momentum=0.9)
+        optimizer = torch.optim.SGD(self.parameters(), lr=self.args.learning_rate,
+                                    weight_decay=self.args.weight_decay, momentum=0.9)
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
             warmup_epochs=5,
-            max_epochs=args.max_epochs,
-            warmup_start_lr=0.01 * self.learning_rate,
-            eta_min=0.01 * self.learning_rate,
+            max_epochs=self.args.max_epochs,
+            warmup_start_lr=0.01 * self.args.learning_rate,
+            eta_min=0.01 * self.args.learning_rate,
         )
-        # scheduler = StepLR(optimizer, step_size=30, gamma=0.1)
         return [optimizer], [scheduler]
 
-    def train_dataloader(self):
-        hflip_prob = 0.5
-        interpolation = InterpolationMode.BILINEAR
-        transform = transforms.Compose([
-            transforms.RandomResizedCrop(224, interpolation=interpolation),
-            transforms.RandomHorizontalFlip(hflip_prob),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
-        dataset = torchvision.datasets.ImageFolder(os.path.join(self.dataset_path, "train"), transform=transform)
-        return torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, num_workers=8, pin_memory=True)
-
-    def val_dataloader(self):
-        interpolation = InterpolationMode.BILINEAR
-        transform = transforms.Compose([
-            transforms.Resize(256, interpolation=interpolation),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
-        dataset = torchvision.datasets.ImageFolder(os.path.join(self.dataset_path, "val"), transform=transform)
-        return torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, num_workers=8, pin_memory=True)
-
+# if __name__=="__main__":
+#     a=torch.rand(8,3,224,224)
+#     model=ResNet18_L2()
+#     b=model(a)
+#     for bi in b:
+#         print(bi.shape)
 
 if __name__ == "__main__":
     args = parse_args()
@@ -183,17 +159,40 @@ if __name__ == "__main__":
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
     checkpoint_callback = ModelCheckpoint(monitor="val_acc3", mode="min", dirpath=args.checkpoint_dir, save_top_k=1)
     wandb_logger = WandbLogger(name=args.run_name, project=args.project, entity=args.entity, offline=args.offline)
-    model = ResNet50(args.max_epochs, args.learning_rate, args.batch_size, args.weight_decay, args.dataset_path)
+    model = ResNet50(args)
 
     if args.resume_from_checkpoint is not None:
         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
                                              callbacks=[checkpoint_callback, lr_monitor],
-                                             resume_from_checkpoint=args.resume_from_checkpoint, precision=16,gradient_clip_val=0.5,
+                                             resume_from_checkpoint=args.resume_from_checkpoint, precision=16,
+                                             gradient_clip_val=1.0,
                                              check_val_every_n_epoch=args.eval_every)
     else:
         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
-                                             callbacks=[checkpoint_callback, lr_monitor], precision=16,gradient_clip_val=0.5,
+                                             callbacks=[checkpoint_callback, lr_monitor], precision=16,
+                                             gradient_clip_val=1.0,
                                              check_val_every_n_epoch=args.eval_every)
 
-    trainer.fit(model)
+    try:
+        from pytorch_lightning.loops import FitLoop
 
+
+        class WorkaroundFitLoop(FitLoop):
+            @property
+            def prefetch_batches(self) -> int:
+                return 1
+
+
+        trainer.fit_loop = WorkaroundFitLoop(
+            trainer.fit_loop.min_epochs, trainer.fit_loop.max_epochs
+        )
+    except:
+        pass
+
+    dali_datamodule = ClassificationDALIDataModule(
+        train_data_path=os.path.join(args.dataset_path, 'train'),
+        val_data_path=os.path.join(args.dataset_path, 'val'),
+        num_workers=args.num_workers,
+        batch_size=args.batch_size)
+
+    trainer.fit(model, datamodule=dali_datamodule)

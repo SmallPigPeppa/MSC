@@ -5,7 +5,7 @@ import torchvision
 import torchvision.transforms as transforms
 import wandb
 import torchmetrics
-from resnet50_baseline import ResNet50
+from resnet50_baseline_train_clip_multi import ResNet50
 import torch.nn.functional as F
 from tqdm import tqdm
 
@@ -22,7 +22,7 @@ def test_resolutions(model, dataset_path, resolutions):
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
-    dataset = torchvision.datasets.ImageFolder(os.path.join(dataset_path, "val"), transform=transform)
+    dataset = torchvision.datasets.ImageFolder(os.path.join(dataset_path, ""), transform=transform)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=64, num_workers=8, pin_memory=True)
     res_list = []
     acc_list = []
@@ -32,10 +32,10 @@ def test_resolutions(model, dataset_path, resolutions):
         with torch.no_grad():
             for batch in tqdm(dataloader):
                 inputs, targets = batch
-                inputs = F.interpolate(inputs, size=int(res), mode='bilinear')
-                inputs = F.interpolate(inputs, size=int(224), mode='bilinear')
+                # inputs = F.interpolate(inputs, size=int(res), mode='bilinear')
+                # inputs = F.interpolate(inputs, size=int(224), mode='bilinear')
                 inputs, targets = inputs.to(device), targets.to(device)
-                outputs = model(inputs)
+                _,_,outputs = model(inputs)
                 acc = accuracy(outputs, targets)
                 correct += acc.item() * inputs.size(0)
                 total += inputs.size(0)
@@ -51,7 +51,7 @@ def test_resolutions(model, dataset_path, resolutions):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--checkpoint_path", type=str,
-                        default='checkpoints/resnet50-baseline/epoch=89-step=112680.ckpt',
+                        default='checkpoints/resnet50-baseline-s-clip-multi/epoch=89-step=112680.ckpt',
                         help="Path to the trained model checkpoint")
     parser.add_argument("--dataset_path", type=str, default="/mnt/mmtech01/dataset/lzy/ILSVRC2012",
                         help="Path to the ImageNet dataset")
@@ -59,17 +59,17 @@ if __name__ == "__main__":
                         help="Name of the Weights & Biases project")
     parser.add_argument("--entity", type=str, default="pigpeppa",
                         help="Name of the Weights & Biases entity (team or user)")
-    parser.add_argument("--run_name", type=str, default="resnet50", help="Name of the Weights & Biases run")
+    parser.add_argument("--run_name", type=str, default="resnet50-debug", help="Name of the Weights & Biases run")
 
     args = parser.parse_args()
 
     wandb.init(name=args.run_name, project=args.project, entity=args.entity)
     wandb_table = wandb.Table(columns=["Resolution", "Accuracy"])
 
-    model = ResNet50.load_from_checkpoint(args.checkpoint_path)
+    model = ResNet50.load_from_checkpoint(args.checkpoint_path,max_epochs=90, learning_rate=0.5, batch_size=128, weight_decay=5e-4, dataset_path='no')
 
-    resolutions = list(range(32, 225, 16))
-    res_list, acc_list = test_resolutions(model, args.dataset_path, resolutions, wandb_table)
+    resolutions = list(range(224, 225, 16))
+    res_list, acc_list = test_resolutions(model, args.dataset_path, resolutions)
 
     wandb.log({"Resolution": res_list, "Accuracy": acc_list})
     wandb.finish()
