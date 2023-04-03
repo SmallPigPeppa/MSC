@@ -2,48 +2,37 @@ import os
 import torchmetrics
 import torch
 from torch import nn
-import torchvision
 import torch.nn.functional as F
 from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 # from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
+# from imagenet_dali import ClassificationDALIDataModule
 from args import parse_args
 import pytorch_lightning as pl
-# from imagenet_dali import ClassificationDALIDataModule
-from torchvision.models import vgg16,densenet121
-
+from torchvision.models import vgg16,densenet121,inception_v3,mobilenetv2
+PRETRAINED=False
 
 def unified_net():
-    u_net = vgg16(pretrained=False)
-    u_net.conv1 = nn.Identity()
-    u_net.bn1 = nn.Identity()
-    u_net.relu = nn.Identity()
-    u_net.maxpool = nn.Identity()
-    u_net.layer1 = nn.Identity()
+    u_net = vgg16(pretrained=PRETRAINED)
+    for i in range(10):
+        u_net.features[i] = nn.Identity()
     return u_net
 
+def sub_net():
+    u_net = vgg16(pretrained=PRETRAINED)
+    sub_net_list=[]
+    for i in range(10):
+        sub_net_list.append(u_net.features[i])
+    return nn.Sequential(*sub_net_list)
 
-class ResNet50_L2(nn.Module):
+
+class VGG16_L2(nn.Module):
     def __init__(self):
         super().__init__()
-        self.large_net = nn.Sequential(
-            nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
-            nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1), resnet50(pretrained=False).layer1
-        )
-        self.mid_net = nn.Sequential(
-            nn.Conv2d(3, 64, kernel_size=5, stride=1, padding=2, bias=False),
-            nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1), resnet50(pretrained=False).layer1
-        )
-        self.small_net = nn.Sequential(
-            nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=2, bias=False),
-            nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True), resnet50(pretrained=False).layer1
-        )
+        self.large_net = sub_net()
+        self.mid_net = sub_net()
+        self.small_net = sub_net()
         self.unified_net = unified_net()
         self.small_size = (32, 32)
         self.mid_size = (128, 128)
@@ -69,11 +58,11 @@ class ResNet50_L2(nn.Module):
         return z1, z2, z3, y1, y2, y3
 
 
-class ResNet50(LightningModule):
+class MSC(LightningModule):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        self.model = ResNet50_L2()
+        self.model = VGG16_L2()
         self.ce_loss = nn.CrossEntropyLoss()
         self.mse_loss = nn.MSELoss()
         self.metrics_acc = torchmetrics.Accuracy()
@@ -146,15 +135,12 @@ class ResNet50(LightningModule):
         )
         return [optimizer], [scheduler]
 
-if __name__=="__main__":
-    model=vgg16()
-    model=densenet121()
-    a=torch.rand(8,3,224,224)
-    model=ResNet50_L2()
-
-    b=model(a)
-    for bi in b:
-        print(bi.shape)
+# if __name__=="__main__":
+#     a=torch.rand(8,3,224,224)
+#     model=VGG16_L2()
+#     b=model(a)
+#     for bi in b:
+#         print(bi.shape)
 
 if __name__ == "__main__":
     args = parse_args()
@@ -162,7 +148,7 @@ if __name__ == "__main__":
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
     checkpoint_callback = ModelCheckpoint(monitor="val_acc3", mode="min", dirpath=args.checkpoint_dir, save_top_k=1)
     wandb_logger = WandbLogger(name=args.run_name, project=args.project, entity=args.entity, offline=args.offline)
-    model = ResNet50(args)
+    model = MSC(args)
 
     if args.resume_from_checkpoint is not None:
         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
@@ -199,3 +185,5 @@ if __name__ == "__main__":
         batch_size=args.batch_size)
 
     trainer.fit(model, datamodule=dali_datamodule)
+
+

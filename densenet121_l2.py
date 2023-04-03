@@ -68,7 +68,7 @@ class DenseNet121_L2(nn.Module):
         return z1, z2, z3, y1, y2, y3
 
 
-class ResNet50(LightningModule):
+class MSC(LightningModule):
     def __init__(self, args):
         super().__init__()
         self.args = args
@@ -161,7 +161,7 @@ if __name__ == "__main__":
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
     checkpoint_callback = ModelCheckpoint(monitor="val_acc3", mode="min", dirpath=args.checkpoint_dir, save_top_k=1)
     wandb_logger = WandbLogger(name=args.run_name, project=args.project, entity=args.entity, offline=args.offline)
-    model = ResNet50(args)
+    model = MSC(args)
 
     if args.resume_from_checkpoint is not None:
         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
