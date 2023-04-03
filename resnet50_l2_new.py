@@ -21,6 +21,7 @@ def unified_net():
     u_net.relu = nn.Identity()
     u_net.maxpool = nn.Identity()
     u_net.layer1 = nn.Identity()
+    u_net.fc = nn.Identity()
     return u_net
 
 
@@ -45,6 +46,7 @@ class ResNet50_L2(nn.Module):
             nn.ReLU(inplace=True), resnet50(pretrained=False).layer1
         )
         self.unified_net = unified_net()
+        self.fc = nn.Linear(2048, 1000)
         self.small_size = (32, 32)
         self.mid_size = (128, 128)
         self.large_size = (224, 224)
@@ -62,11 +64,15 @@ class ResNet50_L2(nn.Module):
         z1 = F.interpolate(z1, size=self.unified_size, mode='bilinear')
         z2 = F.interpolate(z2, size=self.unified_size, mode='bilinear')
 
-        y1 = self.unified_net(z1)
-        y2 = self.unified_net(z2)
-        y3 = self.unified_net(z3)
+        z4 = self.unified_net(z1)
+        z5 = self.unified_net(z2)
+        z6 = self.unified_net(z3)
 
-        return z1, z2, z3, y1, y2, y3
+        y1 = self.fc(z4)
+        y2 = self.fc(z5)
+        y3 = self.fc(z5)
+
+        return z1, z2, z3, z4, z5, z6, y1, y2, y3
 
 
 class ResNet50(LightningModule):
@@ -83,7 +89,7 @@ class ResNet50(LightningModule):
 
     def share_step(self, batch, batch_idx):
         x, y = batch
-        z1, z2, z3, y_hat1, y_hat2, y_hat3 = self(x)
+        z1, z2, z3, z4, z5, z6, y_hat1, y_hat2, y_hat3 = self(x)
 
         ce_loss1 = self.ce_loss(y_hat1, y)
         ce_loss2 = self.ce_loss(y_hat2, y)
@@ -92,6 +98,10 @@ class ResNet50(LightningModule):
         si_loss1 = self.mse_loss(z1, z2)
         si_loss2 = self.mse_loss(z1, z3)
         si_loss3 = self.mse_loss(z2, z3)
+
+        si_loss4 = self.mse_loss(z4, z5)
+        si_loss5 = self.mse_loss(z4, z6)
+        si_loss6 = self.mse_loss(z5, z6)
 
         if si_loss1 < 0.01:
             si_loss1 = 0
@@ -102,7 +112,16 @@ class ResNet50(LightningModule):
         if si_loss3 < 0.01:
             si_loss3 = 0
 
-        total_loss = si_loss1 + si_loss2 + si_loss3 + ce_loss1 + ce_loss2 + ce_loss3
+        if si_loss4 < 0.01:
+            si_loss4 = 0
+
+        if si_loss5 < 0.01:
+            si_loss5 = 0
+
+        if si_loss6 < 0.01:
+            si_loss6 = 0
+
+        total_loss = si_loss1 + si_loss2 + si_loss3 + si_loss4 + si_loss5 + si_loss6 + ce_loss1 + ce_loss2 + ce_loss3
 
         acc1 = self.metrics_acc(y_hat1, y)
         acc2 = self.metrics_acc(y_hat2, y)
@@ -112,6 +131,9 @@ class ResNet50(LightningModule):
             "si_loss1": si_loss1,
             "si_loss2": si_loss2,
             "si_loss3": si_loss3,
+            "si_loss4": si_loss4,
+            "si_loss5": si_loss5,
+            "si_loss6": si_loss6,
             "ce_loss1": ce_loss1,
             "ce_loss2": ce_loss2,
             "ce_loss3": ce_loss3,
@@ -145,6 +167,7 @@ class ResNet50(LightningModule):
             eta_min=0.01 * self.args.learning_rate,
         )
         return [optimizer], [scheduler]
+
 
 # if __name__=="__main__":
 #     a=torch.rand(8,3,224,224)
