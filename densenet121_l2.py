@@ -2,47 +2,46 @@ import os
 import torchmetrics
 import torch
 from torch import nn
-import torchvision
 import torch.nn.functional as F
 from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
-# from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
+from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 from args import parse_args
 import pytorch_lightning as pl
-# from imagenet_dali import ClassificationDALIDataModule
-from torchvision.models import vgg16,densenet121
-
+from imagenet_dali import ClassificationDALIDataModule
+from torchvision.models import vgg16,densenet121,inception_v3,mobilenetv2
+PRETRAINED=True
 
 def unified_net():
-    u_net = vgg16(pretrained=False)
-    u_net.conv1 = nn.Identity()
-    u_net.bn1 = nn.Identity()
-    u_net.relu = nn.Identity()
-    u_net.maxpool = nn.Identity()
-    u_net.layer1 = nn.Identity()
+    u_net = densenet121(pretrained=PRETRAINED)
+    u_net.features.conv0 = nn.Identity()
+    u_net.features.norm0 = nn.Identity()
+    u_net.features.relu0 = nn.Identity()
+    u_net.features.pool0 = nn.Identity()
+    u_net.features.denseblock1 = nn.Identity()
     return u_net
 
 
-class ResNet50_L2(nn.Module):
+class DenseNet121_L2(nn.Module):
     def __init__(self):
         super().__init__()
         self.large_net = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1), resnet50(pretrained=False).layer1
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1), densenet121(pretrained=PRETRAINED).features.denseblock1
         )
         self.mid_net = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=5, stride=1, padding=2, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1), resnet50(pretrained=False).layer1
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1), densenet121(pretrained=PRETRAINED).features.denseblock1
         )
         self.small_net = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=2, bias=False),
             nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True), resnet50(pretrained=False).layer1
+            nn.ReLU(inplace=True), densenet121(pretrained=PRETRAINED).features.denseblock1
         )
         self.unified_net = unified_net()
         self.small_size = (32, 32)
@@ -73,7 +72,7 @@ class ResNet50(LightningModule):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        self.model = ResNet50_L2()
+        self.model = DenseNet121_L2()
         self.ce_loss = nn.CrossEntropyLoss()
         self.mse_loss = nn.MSELoss()
         self.metrics_acc = torchmetrics.Accuracy()
@@ -146,15 +145,15 @@ class ResNet50(LightningModule):
         )
         return [optimizer], [scheduler]
 
-if __name__=="__main__":
-    model=vgg16()
-    model=densenet121()
-    a=torch.rand(8,3,224,224)
-    model=ResNet50_L2()
-
-    b=model(a)
-    for bi in b:
-        print(bi.shape)
+# if __name__=="__main__":
+#     model=vgg16()
+#     model=densenet121()
+#     a=torch.rand(8,3,224,224)
+#     model=DenseNet121_L2()
+#
+#     b=model(a)
+#     for bi in b:
+#         print(bi.shape)
 
 if __name__ == "__main__":
     args = parse_args()
@@ -199,3 +198,5 @@ if __name__ == "__main__":
         batch_size=args.batch_size)
 
     trainer.fit(model, datamodule=dali_datamodule)
+
+
