@@ -6,8 +6,8 @@ import torch.nn.functional as F
 from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
-# from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
-# from imagenet_dali import ClassificationDALIDataModule
+from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
+from imagenet_dali import ClassificationDALIDataModule
 from args import parse_args
 import pytorch_lightning as pl
 from torchvision.models import vgg16,densenet121,inception_v3,mobilenetv2
