@@ -3,7 +3,6 @@ import torchmetrics
 import torch
 from torch import nn
 import torchvision
-import torchvision.transforms as transforms
 from torchvision.transforms.functional import InterpolationMode
 import pytorch_lightning as pl
 from pytorch_lightning import LightningModule, Trainer
@@ -16,9 +15,11 @@ import torch.nn.functional as F
 from torchvision.models import resnet50
 from torchvision import transforms, datasets
 
+PRETRAINED = True
+
 
 def unified_net():
-    u_net = torchvision.models.resnet50(pretrained=False)
+    u_net = torchvision.models.resnet50(pretrained=PRETRAINED)
     u_net.conv1 = nn.Identity()
     u_net.bn1 = nn.Identity()
     u_net.relu = nn.Identity()
@@ -34,18 +35,18 @@ class MultiScaleNet(nn.Module):
             nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1), resnet50(pretrained=False).layer1
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1), resnet50(pretrained=PRETRAINED).layer1
         )
         self.mid_net = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=5, stride=1, padding=2, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1), resnet50(pretrained=False).layer1
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1), resnet50(pretrained=PRETRAINED).layer1
         )
         self.small_net = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=2, bias=False),
             nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True), resnet50(pretrained=False).layer1
+            nn.ReLU(inplace=True), resnet50(pretrained=PRETRAINED).layer1
         )
         self.unified_net = unified_net()
         self.unified_size = (56, 56)
@@ -67,13 +68,13 @@ class MultiScaleNet(nn.Module):
 
 
 class ResNet50(LightningModule):
-    def __init__(self, max_epochs: int, learning_rate: float, batch_size: int, weight_decay: float, dataset_path: str):
+    def __init__(self, args):
         super().__init__()
-        self.max_epochs = max_epochs
-        self.learning_rate = learning_rate
-        self.batch_size = batch_size
-        self.weight_decay = weight_decay
-        self.dataset_path = dataset_path
+        self.max_epochs = args.max_epochs
+        self.learning_rate = args.learning_rate
+        self.batch_size = args.batch_size
+        self.weight_decay = args.weight_decay
+        self.dataset_path = args.dataset_path
         self.model = MultiScaleNet()
         self.ce_loss = nn.CrossEntropyLoss()
         self.mse_loss = nn.MSELoss()
@@ -137,8 +138,10 @@ class ResNet50(LightningModule):
         return val_result_dict
 
     def configure_optimizers(self):
-        optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay,
-                                    momentum=0.9)
+        optimizer = torch.optim.SGD(
+            self.parameters(), lr=self.learning_rate,
+            weight_decay=self.weight_decay, momentum=0.9
+        )
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
             warmup_epochs=5,
@@ -150,45 +153,39 @@ class ResNet50(LightningModule):
         return [optimizer], [scheduler]
 
     def train_dataloader(self):
+        size = 224
         hflip_prob = 0.5
         interpolation = InterpolationMode.BILINEAR
 
-        def create_random_resized_crop(size):
-            return transforms.Compose([
-                transforms.RandomResizedCrop(size, interpolation=interpolation),
-                transforms.RandomHorizontalFlip(hflip_prob),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-            ])
+        def process_image(img, sizes=[224, 128, 32], mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
+            resized_imgs = [transforms.Resize(s, interpolation=interpolation)(img) for s in sizes]
+            tensor_imgs = [transforms.ToTensor()(resized_img) for resized_img in resized_imgs]
+            normalized_imgs = [transforms.Normalize(mean, std)(tensor_img) for tensor_img in tensor_imgs]
+            return normalized_imgs
 
         transform = transforms.Compose([
-            transforms.Lambda(lambda img: (
-                create_random_resized_crop(32)(img),
-                create_random_resized_crop(128)(img),
-                create_random_resized_crop(224)(img),
-            )),
+            transforms.RandomResizedCrop(size, interpolation=interpolation),
+            transforms.RandomHorizontalFlip(hflip_prob),
+            transforms.Lambda(process_image)
         ])
 
         dataset = torchvision.datasets.ImageFolder(os.path.join(self.dataset_path, "train"), transform=transform)
         return torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, num_workers=8, pin_memory=True)
 
     def val_dataloader(self):
+        size = 224
         interpolation = InterpolationMode.BILINEAR
 
-        def create_val_transform(size):
-            return transforms.Compose([
-                transforms.Resize(256, interpolation=interpolation),
-                transforms.CenterCrop(size),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            ])
+        def process_image(img, sizes=[224, 128, 32], mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
+            resized_imgs = [transforms.Resize(s, interpolation=interpolation)(img) for s in sizes]
+            tensor_imgs = [transforms.ToTensor()(resized_img) for resized_img in resized_imgs]
+            normalized_imgs = [transforms.Normalize(mean, std)(tensor_img) for tensor_img in tensor_imgs]
+            return normalized_imgs
 
         transform = transforms.Compose([
-            transforms.Lambda(lambda img: (
-                create_val_transform(32)(img),
-                create_val_transform(128)(img),
-                create_val_transform(224)(img),
-            )),
+            transforms.Resize(256, interpolation=interpolation),
+            transforms.CenterCrop(size),
+            transforms.Lambda(process_image),
         ])
 
         dataset = torchvision.datasets.ImageFolder(os.path.join(self.dataset_path, "val"), transform=transform)
@@ -201,18 +198,18 @@ if __name__ == "__main__":
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
     checkpoint_callback = ModelCheckpoint(monitor="val_acc3", mode="min", dirpath=args.checkpoint_dir, save_top_k=1)
     wandb_logger = WandbLogger(name=args.run_name, project=args.project, entity=args.entity, offline=args.offline)
-    model = ResNet50(args.max_epochs, args.learning_rate, args.batch_size, args.weight_decay, args.dataset_path)
+    model = ResNet50(args)
 
     if args.resume_from_checkpoint is not None:
         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
                                              callbacks=[checkpoint_callback, lr_monitor],
                                              resume_from_checkpoint=args.resume_from_checkpoint, precision=16,
-                                             gradient_clip_val=1.0,
+                                             gradient_clip_val=0.5,
                                              check_val_every_n_epoch=args.eval_every)
     else:
         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
                                              callbacks=[checkpoint_callback, lr_monitor], precision=16,
-                                             gradient_clip_val=1.0,
+                                             gradient_clip_val=0.5,
                                              check_val_every_n_epoch=args.eval_every)
 
     trainer.fit(model)
