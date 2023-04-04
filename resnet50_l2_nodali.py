@@ -86,7 +86,7 @@ class ResNet50(LightningModule):
     def share_step(self, batch, batch_idx):
         x, y = batch
         print(len(batch))
-        print(batch.shape)
+        print(x.shape)
 
         z1, z2, z3, y_hat1, y_hat2, y_hat3 = self(x)
 
