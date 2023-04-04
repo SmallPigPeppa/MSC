@@ -53,11 +53,6 @@ class ResNet50_L2(nn.Module):
     def forward(self, x):
         x1, x2, x3 = x
 
-        print('x1.shape',x1.shape)
-        print('x2.shape',x2.shape)
-        print('x3.shape',x3.shape)
-
-
         z1 = self.small_net(x1)
         z2 = self.mid_net(x2)
         z3 = self.large_net(x3)
@@ -163,7 +158,7 @@ class MSC(LightningModule):
         hflip_prob = 0.5
         interpolation = InterpolationMode.BILINEAR
 
-        def process_image(img, sizes=[224, 128, 32], mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
+        def process_image(img, sizes=[32,128,224], mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
             resized_imgs = [transforms.Resize(s, interpolation=interpolation)(img) for s in sizes]
             tensor_imgs = [transforms.ToTensor()(resized_img) for resized_img in resized_imgs]
             normalized_imgs = [transforms.Normalize(mean, std)(tensor_img) for tensor_img in tensor_imgs]
@@ -182,7 +177,7 @@ class MSC(LightningModule):
         size = 224
         interpolation = InterpolationMode.BILINEAR
 
-        def process_image(img, sizes=[224, 128, 32], mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
+        def process_image(img, sizes=[32,128,224], mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
             resized_imgs = [transforms.Resize(s, interpolation=interpolation)(img) for s in sizes]
             tensor_imgs = [transforms.ToTensor()(resized_img) for resized_img in resized_imgs]
             normalized_imgs = [transforms.Normalize(mean, std)(tensor_img) for tensor_img in tensor_imgs]
