@@ -52,7 +52,6 @@ class MultiScaleNet(nn.Module):
 
     def forward(self, x):
         x1, x2, x3 = x
-        import pdb;pdb.set_trace()
         z1 = self.small_net(x1)
         z2 = self.mid_net(x2)
         z3 = self.large_net(x3)
@@ -86,6 +85,9 @@ class ResNet50(LightningModule):
 
     def share_step(self, batch, batch_idx):
         x, y = batch
+        print(len(batch))
+        print(batch.shape)
+
         z1, z2, z3, y_hat1, y_hat2, y_hat3 = self(x)
 
         ce_loss1 = self.ce_loss(y_hat1, y)
