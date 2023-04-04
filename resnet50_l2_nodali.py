@@ -14,7 +14,7 @@ import torch.nn.functional as F
 from torchvision.models import resnet50
 from torchvision import transforms, datasets
 
-PRETRAINED = True
+PRETRAINED = False
 
 
 def unified_net():
