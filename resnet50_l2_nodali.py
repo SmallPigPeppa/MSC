@@ -27,9 +27,9 @@ def unified_net():
     return u_net
 
 
-class MultiScaleNet(nn.Module):
+class ResNet50_L2(nn.Module):
     def __init__(self):
-        super(MultiScaleNet, self).__init__()
+        super().__init__()
         self.large_net = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
             nn.BatchNorm2d(64),
@@ -52,6 +52,12 @@ class MultiScaleNet(nn.Module):
 
     def forward(self, x):
         x1, x2, x3 = x
+
+        print('x1.shape',x1.shape)
+        print('x2.shape',x2.shape)
+        print('x3.shape',x3.shape)
+
+
         z1 = self.small_net(x1)
         z2 = self.mid_net(x2)
         z3 = self.large_net(x3)
@@ -66,7 +72,7 @@ class MultiScaleNet(nn.Module):
         return z1, z2, z3, y1, y2, y3
 
 
-class ResNet50(LightningModule):
+class MSC(LightningModule):
     def __init__(self, args):
         super().__init__()
         self.max_epochs = args.max_epochs
@@ -74,7 +80,7 @@ class ResNet50(LightningModule):
         self.batch_size = args.batch_size
         self.weight_decay = args.weight_decay
         self.dataset_path = args.dataset_path
-        self.model = MultiScaleNet()
+        self.model = ResNet50_L2()
         self.ce_loss = nn.CrossEntropyLoss()
         self.mse_loss = nn.MSELoss()
         self.train_acc = torchmetrics.Accuracy()
@@ -85,8 +91,6 @@ class ResNet50(LightningModule):
 
     def share_step(self, batch, batch_idx):
         x, y = batch
-        print(len(batch))
-        print(x.shape)
 
         z1, z2, z3, y_hat1, y_hat2, y_hat3 = self(x)
 
@@ -200,7 +204,7 @@ if __name__ == "__main__":
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
     checkpoint_callback = ModelCheckpoint(monitor="val_acc3", mode="min", dirpath=args.checkpoint_dir, save_top_k=1)
     wandb_logger = WandbLogger(name=args.run_name, project=args.project, entity=args.entity, offline=args.offline)
-    model = ResNet50(args)
+    model = MSC(args)
 
     if args.resume_from_checkpoint is not None:
         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
