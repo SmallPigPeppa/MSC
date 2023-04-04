@@ -52,6 +52,7 @@ class MultiScaleNet(nn.Module):
 
     def forward(self, x):
         x1, x2, x3 = x
+        import pdb;pdb.set_trace()
         z1 = self.small_net(x1)
         z2 = self.mid_net(x2)
         z3 = self.large_net(x3)
