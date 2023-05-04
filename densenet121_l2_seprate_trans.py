@@ -10,10 +10,8 @@ from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 from args import parse_args
 import pytorch_lightning as pl
 from imagenet_dali import ClassificationDALIDataModule
-from torchvision.models import vgg16, densenet121, inception_v3, mobilenetv2
-
-PRETRAINED = False
-
+from torchvision.models import vgg16,densenet121,inception_v3,mobilenetv2
+PRETRAINED=False
 
 def unified_net():
     u_net = densenet121(pretrained=PRETRAINED)
@@ -23,8 +21,7 @@ def unified_net():
     u_net.features.pool0 = nn.Identity()
     u_net.features.denseblock1 = nn.Identity()
     u_net.features.transition1 = nn.Identity()
-    u_net.features.denseblock2 = nn.Identity()
-    u_net.features.transition2 = nn.Identity()
+
     return u_net
 
 
@@ -38,8 +35,6 @@ class DenseNet121_L2(nn.Module):
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
             densenet121(pretrained=PRETRAINED).features.denseblock1,
             densenet121(pretrained=PRETRAINED).features.transition1,
-            densenet121(pretrained=PRETRAINED).features.denseblock2,
-            densenet121(pretrained=PRETRAINED).features.transition2
         )
         self.mid_net = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=5, stride=1, padding=2, bias=False),
@@ -48,8 +43,6 @@ class DenseNet121_L2(nn.Module):
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
             densenet121(pretrained=PRETRAINED).features.denseblock1,
             densenet121(pretrained=PRETRAINED).features.transition1,
-            densenet121(pretrained=PRETRAINED).features.denseblock2,
-            densenet121(pretrained=PRETRAINED).features.transition2
         )
         self.small_net = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=2, bias=False),
@@ -57,14 +50,12 @@ class DenseNet121_L2(nn.Module):
             nn.ReLU(inplace=True),
             densenet121(pretrained=PRETRAINED).features.denseblock1,
             densenet121(pretrained=PRETRAINED).features.transition1,
-            densenet121(pretrained=PRETRAINED).features.denseblock2,
-            densenet121(pretrained=PRETRAINED).features.transition2
         )
         self.unified_net = unified_net()
         self.small_size = (32, 32)
         self.mid_size = (128, 128)
         self.large_size = (224, 224)
-        self.unified_size = (14, 14)
+        self.unified_size = (28, 28)
 
     def forward(self, imgs):
         small_imgs = F.interpolate(imgs, size=self.small_size, mode='bilinear')
@@ -163,14 +154,13 @@ class MSC(LightningModule):
         )
         return [optimizer], [scheduler]
 
-
-# if __name__ == "__main__":
-#     model = vgg16()
-#     model = densenet121()
-#     a = torch.rand(8, 3, 224, 224)
-#     model = DenseNet121_L2()
+# if __name__=="__main__":
+#     model=vgg16()
+#     model=densenet121()
+#     a=torch.rand(8,3,224,224)
+#     model=DenseNet121_L2()
 #
-#     b = model(a)
+#     b=model(a)
 #     for bi in b:
 #         print(bi.shape)
 
@@ -217,3 +207,5 @@ if __name__ == "__main__":
         batch_size=args.batch_size)
 
     trainer.fit(model, datamodule=dali_datamodule)
+
+
