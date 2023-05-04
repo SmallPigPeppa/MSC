@@ -14,6 +14,7 @@ cd /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali
 
 
 
+
 export https_proxy=http://10.7.4.2:3128
 cd /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali
 /root/miniconda3/envs/solo-learn/bin/python densenet121_l3.py \
