@@ -76,6 +76,7 @@ class MSC(LightningModule):
         self.ce_loss = nn.CrossEntropyLoss()
         self.mse_loss = nn.MSELoss()
         self.metrics_acc = torchmetrics.Accuracy()
+        # trunc
 
     def forward(self, x):
         return self.model(x)
@@ -92,13 +93,13 @@ class MSC(LightningModule):
         si_loss2 = self.mse_loss(z1, z3)
         si_loss3 = self.mse_loss(z2, z3)
 
-        if si_loss1 < 0.01:
+        if si_loss1 < self.args.trunc:
             si_loss1 = 0
 
-        if si_loss2 < 0.01:
+        if si_loss2 < self.args.trunc:
             si_loss2 = 0
 
-        if si_loss3 < 0.01:
+        if si_loss3 < self.args.trunc:
             si_loss3 = 0
 
         total_loss = si_loss1 + si_loss2 + si_loss3 + ce_loss1 + ce_loss2 + ce_loss3
@@ -160,7 +161,7 @@ if __name__ == "__main__":
     pl.seed_everything(19)
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
     checkpoint_callback = ModelCheckpoint(monitor="val_acc3", mode="min", dirpath=args.checkpoint_dir, save_top_k=1)
-    wandb_logger = WandbLogger(name=args.run_name, project=args.project, entity=args.entity, offline=args.offline)
+    wandb_logger = WandbLogger(name=f"{args.run_name}_trunc:{args.trunc}", project=args.project, entity=args.entity, offline=args.offline)
     model = MSC(args)
 
     if args.resume_from_checkpoint is not None:
