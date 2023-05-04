@@ -7,7 +7,7 @@ cd /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali
 --num_workers 8 \
 --batch_size 128 \
 --checkpoint_dir checkpoints/densenet121-l3 \
---run_name densenet121-l2 \
+--run_name densenet121-l3 \
 --max_epochs 90 \
 --learning_rate 0.5 \
 --trunc 0.001
@@ -23,7 +23,7 @@ cd /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali
 --num_workers 8 \
 --batch_size 32 \
 --checkpoint_dir checkpoints/densenet121-l3 \
---run_name densenet121-l2 \
+--run_name densenet121-l3 \
 --max_epochs 90 \
 --learning_rate 0.1 \
 --trunc 0.001
