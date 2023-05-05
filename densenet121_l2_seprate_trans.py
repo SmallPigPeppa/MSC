@@ -173,13 +173,13 @@ if __name__ == "__main__":
     model = MSC(args)
 
     if args.resume_from_checkpoint is not None:
-        trainer = Trainer.from_argparse_args(args, gpus=8, accelerator="ddp", logger=wandb_logger,
+        trainer = Trainer.from_argparse_args(args, gpus=8, strategy='ddp', logger=wandb_logger,
                                              callbacks=[checkpoint_callback, lr_monitor],
                                              resume_from_checkpoint=args.resume_from_checkpoint, precision=16,
                                              gradient_clip_val=1.0,
                                              check_val_every_n_epoch=args.eval_every)
     else:
-        trainer = Trainer.from_argparse_args(args, gpus=8, accelerator="ddp", logger=wandb_logger,
+        trainer = Trainer.from_argparse_args(args, gpus=8, strategy='ddp', logger=wandb_logger,
                                              callbacks=[checkpoint_callback, lr_monitor], precision=16,
                                              gradient_clip_val=1.0,
                                              check_val_every_n_epoch=args.eval_every)
