@@ -7,64 +7,37 @@ from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 # from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
+# from imagenet_dali import ClassificationDALIDataModule
 from args import parse_args
 import pytorch_lightning as pl
-# from imagenet_dali import ClassificationDALIDataModule
-from torchvision.models import vgg16, densenet121, inception_v3, mobilenetv2
-
-PRETRAINED = False
-
-
+from torchvision.models import vgg16,densenet121,inception_v3,mobilenet_v2
+PRETRAINED=False
+LAYERS=1
 def unified_net():
-    u_net = densenet121(pretrained=PRETRAINED)
-    u_net.features.conv0 = nn.Identity()
-    u_net.features.norm0 = nn.Identity()
-    u_net.features.relu0 = nn.Identity()
-    u_net.features.pool0 = nn.Identity()
-    u_net.features.denseblock1 = nn.Identity()
-    u_net.features.transition1 = nn.Identity()
-    u_net.features.denseblock2 = nn.Identity()
-    u_net.features.transition2 = nn.Identity()
+    u_net = mobilenet_v2(pretrained=PRETRAINED)
+    for i in range(LAYERS):
+        u_net.features[i] = nn.Identity()
     return u_net
 
+def sub_net():
+    u_net = mobilenet_v2(pretrained=PRETRAINED)
+    sub_net_list=[]
+    for i in range(LAYERS):
+        sub_net_list.append(u_net.features[i])
+    return nn.Sequential(*sub_net_list)
 
-class DenseNet121_L2(nn.Module):
+
+class MobileNetV2_L2(nn.Module):
     def __init__(self):
         super().__init__()
-        self.large_net = nn.Sequential(
-            nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
-            nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
-            densenet121(pretrained=PRETRAINED).features.denseblock1,
-            densenet121(pretrained=PRETRAINED).features.transition1,
-            densenet121(pretrained=PRETRAINED).features.denseblock2,
-            densenet121(pretrained=PRETRAINED).features.transition2
-        )
-        self.mid_net = nn.Sequential(
-            nn.Conv2d(3, 64, kernel_size=5, stride=1, padding=2, bias=False),
-            nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
-            densenet121(pretrained=PRETRAINED).features.denseblock1,
-            densenet121(pretrained=PRETRAINED).features.transition1,
-            densenet121(pretrained=PRETRAINED).features.denseblock2,
-            densenet121(pretrained=PRETRAINED).features.transition2
-        )
-        self.small_net = nn.Sequential(
-            nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=2, bias=False),
-            nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True),
-            densenet121(pretrained=PRETRAINED).features.denseblock1,
-            densenet121(pretrained=PRETRAINED).features.transition1,
-            densenet121(pretrained=PRETRAINED).features.denseblock2,
-            densenet121(pretrained=PRETRAINED).features.transition2
-        )
+        self.large_net = sub_net()
+        self.mid_net = sub_net()
+        self.small_net = sub_net()
         self.unified_net = unified_net()
         self.small_size = (32, 32)
         self.mid_size = (128, 128)
         self.large_size = (224, 224)
-        self.unified_size = (14, 14)
+        self.unified_size = (56, 56)
 
     def forward(self, imgs):
         small_imgs = F.interpolate(imgs, size=self.small_size, mode='bilinear')
@@ -89,11 +62,10 @@ class MSC(LightningModule):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        self.model = DenseNet121_L2()
+        self.model = MobileNetV2_L2()
         self.ce_loss = nn.CrossEntropyLoss()
         self.mse_loss = nn.MSELoss()
         self.metrics_acc = torchmetrics.Accuracy()
-        # trunc
 
     def forward(self, x):
         return self.model(x)
@@ -110,13 +82,13 @@ class MSC(LightningModule):
         si_loss2 = self.mse_loss(z1, z3)
         si_loss3 = self.mse_loss(z2, z3)
 
-        if si_loss1 < self.args.trunc:
+        if si_loss1 < 0.01:
             si_loss1 = 0
 
-        if si_loss2 < self.args.trunc:
+        if si_loss2 < 0.01:
             si_loss2 = 0
 
-        if si_loss3 < self.args.trunc:
+        if si_loss3 < 0.01:
             si_loss3 = 0
 
         total_loss = si_loss1 + si_loss2 + si_loss3 + ce_loss1 + ce_loss2 + ce_loss3
@@ -163,23 +135,19 @@ class MSC(LightningModule):
         )
         return [optimizer], [scheduler]
 
-
-if __name__ == "__main__":
-    model = vgg16()
-    model = densenet121()
-    a = torch.rand(8, 3, 224, 224)
-    model = DenseNet121_L2()
-
-    b = model(a)
+if __name__=="__main__":
+    a=torch.rand(8,3,224,224)
+    model=MobileNetV2_L2()
+    b=model(a)
     for bi in b:
         print(bi.shape)
-
+#
 # if __name__ == "__main__":
 #     args = parse_args()
 #     pl.seed_everything(19)
 #     lr_monitor = LearningRateMonitor(logging_interval="epoch")
 #     checkpoint_callback = ModelCheckpoint(monitor="val_acc3", mode="min", dirpath=args.checkpoint_dir, save_top_k=1)
-#     wandb_logger = WandbLogger(name=f"{args.run_name}_trunc:{args.trunc}", project=args.project, entity=args.entity, offline=args.offline)
+#     wandb_logger = WandbLogger(name=args.run_name, project=args.project, entity=args.entity, offline=args.offline)
 #     model = MSC(args)
 #
 #     if args.resume_from_checkpoint is not None:
@@ -217,3 +185,5 @@ if __name__ == "__main__":
 #         batch_size=args.batch_size)
 #
 #     trainer.fit(model, datamodule=dali_datamodule)
+#
+#
