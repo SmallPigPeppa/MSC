@@ -11,9 +11,9 @@ from imagenet_dali import ClassificationDALIDataModule
 from args import parse_args
 import pytorch_lightning as pl
 from torchvision.models import vgg16,densenet121,inception_v3,mobilenet_v2
-from mobilenetv2_l2_subnet import sub_net1,sub_net2
+from mobilenetv2_l3_subnet import sub_net1,sub_net2
 PRETRAINED=False
-LAYERS=6
+LAYERS=10
 def unified_net():
     u_net = mobilenet_v2(pretrained=PRETRAINED)
     for i in range(LAYERS):
@@ -28,7 +28,7 @@ def sub_net():
     return nn.Sequential(*sub_net_list)
 
 
-class MobileNetV2_L2(nn.Module):
+class MobileNetV2_L3(nn.Module):
     def __init__(self):
         super().__init__()
         self.large_net = sub_net()
@@ -38,7 +38,7 @@ class MobileNetV2_L2(nn.Module):
         self.small_size = (32, 32)
         self.mid_size = (128, 128)
         self.large_size = (224, 224)
-        self.unified_size = (28, 28)
+        self.unified_size = (14, 14)
 
     def forward(self, imgs):
         small_imgs = F.interpolate(imgs, size=self.small_size, mode='bilinear')
@@ -63,7 +63,7 @@ class MSC(LightningModule):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        self.model = MobileNetV2_L2()
+        self.model = MobileNetV2_L3()
         self.ce_loss = nn.CrossEntropyLoss()
         self.mse_loss = nn.MSELoss()
         self.metrics_acc = torchmetrics.Accuracy()
@@ -138,7 +138,7 @@ class MSC(LightningModule):
 
 # if __name__=="__main__":
 #     a=torch.rand(8,3,224,224)
-#     model=MobileNetV2_L2()
+#     model=MobileNetV2_L3()
 #     b=model(a)
 #     for bi in b:
 #         print(bi.shape)
