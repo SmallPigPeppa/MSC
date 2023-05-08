@@ -6,8 +6,8 @@ cd /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali
 --project Multi-Scale-CNN-HPO \
 --num_workers 8 \
 --batch_size 32 \
---checkpoint_dir checkpoints/mobilenetv2-l2 \
---run_name mobilenetv2-l2 \
+--checkpoint_dir checkpoints/mobilenetv2-l2-wd2 \
+--run_name mobilenetv2-l2-wd2 \
 --max_epochs 300 \
 --learning_rate 0.1 \
 --trunc 0.001
