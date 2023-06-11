@@ -22,30 +22,43 @@ def test_resolutions(model, dataset_path, resolutions):
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
-    dataset = torchvision.datasets.ImageFolder(os.path.join(dataset_path, ""), transform=transform)
+    dataset = torchvision.datasets.ImageFolder(os.path.join(dataset_path, "val"), transform=transform)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=256, num_workers=8, pin_memory=True)
     res_list = []
-    acc_list = []
+    acc1_list = []
+    acc2_list = []
+    acc3_list = []
     for res in resolutions:
-        correct = 0
+        correct1 = 0
+        correct2 = 0
+        correct3 = 0
         total = 0
         with torch.no_grad():
             for batch in tqdm(dataloader):
                 inputs, targets = batch
-                # inputs = F.interpolate(inputs, size=int(res), mode='bilinear')
+                inputs = F.interpolate(inputs, size=int(res), mode='bilinear')
                 # inputs = F.interpolate(inputs, size=int(224), mode='bilinear')
                 inputs, targets = inputs.to(device), targets.to(device)
-                _,_,outputs = model(inputs)
-                acc = accuracy(outputs, targets)
-                correct += acc.item() * inputs.size(0)
+                z1, z2, z3, y_hat1, y_hat2, y_hat3 = model(inputs)
+                acc1 = accuracy(y_hat1, targets)
+                correct1 += acc1.item() * inputs.size(0)
+                acc2 = accuracy(y_hat2, targets)
+                correct2 += acc2.item() * inputs.size(0)
+                acc3 = accuracy(y_hat3, targets)
+                correct3 += acc3.item() * inputs.size(0)
                 total += inputs.size(0)
 
-        mean_acc = correct / total
-        res_list.append(res)
-        acc_list.append(mean_acc)
-        print(f"Resolution: {res}, Accuracy: {mean_acc}")
+        mean_acc1 = correct1 / total
+        mean_acc2 = correct2 / total
+        mean_acc3 = correct3 / total
 
-    return res_list, acc_list
+        acc1_list.append(mean_acc1)
+        acc2_list.append(mean_acc2)
+        acc3_list.append(mean_acc3)
+        res_list.append(res)
+        print(f"Resolution: {res}, Accuracy1: {mean_acc1},Accuracy2: {mean_acc2},Accuracy3: {mean_acc3}")
+
+    return res_list, acc1_list, acc2_list, acc3_list
 
 
 if __name__ == "__main__":
@@ -68,8 +81,8 @@ if __name__ == "__main__":
 
     model = ResNet50.load_from_checkpoint(args.checkpoint_path)
 
-    resolutions = list(range(224, 225, 16))
-    res_list, acc_list = test_resolutions(model, args.dataset_path, resolutions)
+    resolutions = list(range(32, 225, 16))
+    res_list, acc1_list, acc2_list, acc3_list = test_resolutions(model, args.dataset_path, resolutions)
 
-    wandb.log({"Resolution": res_list, "Accuracy": acc_list})
+    wandb.log({"Resolution": res_list, "Accuracy1": acc1_list, "Accuracy2": acc2_list, "Accuracy3": acc3_list})
     wandb.finish()
