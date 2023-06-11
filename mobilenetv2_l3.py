@@ -147,7 +147,7 @@ if __name__ == "__main__":
     args = parse_args()
     pl.seed_everything(19)
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
-    checkpoint_callback = ModelCheckpoint(monitor="val_acc3", mode="min", dirpath=args.checkpoint_dir, save_top_k=1)
+    checkpoint_callback = ModelCheckpoint(monitor="val_acc3", mode="max", dirpath=args.checkpoint_dir, save_top_k=1,save_last=True)
     wandb_logger = WandbLogger(name=f"{args.run_name}_trunc:{args.trunc}", project=args.project, entity=args.entity, offline=args.offline)
     model = MSC(args)
 
