@@ -15,11 +15,28 @@ PRETRAINED=False
 
 
 
+class DenseNet121_L2(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.unified_net = densenet121(pretrained=PRETRAINED)
+
+    def forward(self, imgs):
+        small_imgs = F.interpolate(imgs, size=self.small_size, mode='bilinear')
+        mid_imgs = F.interpolate(imgs, size=self.mid_size, mode='bilinear')
+        large_imgs = F.interpolate(imgs, size=self.large_size, mode='bilinear')
+
+        y1 = self.unified_net(small_imgs)
+        y2 = self.unified_net(mid_imgs)
+        y3 = self.unified_net(large_imgs)
+
+        return y1, y2, y3
+
+
 class MSC(LightningModule):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        self.model = densenet121(pretrained=PRETRAINED)
+        self.model = DenseNet121_L2()
         self.ce_loss = nn.CrossEntropyLoss()
         self.mse_loss = nn.MSELoss()
         self.metrics_acc = torchmetrics.Accuracy()
@@ -30,17 +47,27 @@ class MSC(LightningModule):
 
     def share_step(self, batch, batch_idx):
         x, y = batch
-        y_hat3 = self(x)
+        y_hat1, y_hat2, y_hat3 = self(x)
+
+        ce_loss1 = self.ce_loss(y_hat1, y)
+        ce_loss2 = self.ce_loss(y_hat2, y)
         ce_loss3 = self.ce_loss(y_hat3, y)
 
 
-        total_loss =ce_loss3
 
+        total_loss = ce_loss1 + ce_loss2 + ce_loss3
+
+        acc1 = self.metrics_acc(y_hat1, y)
+        acc2 = self.metrics_acc(y_hat2, y)
         acc3 = self.metrics_acc(y_hat3, y)
 
         result_dict = {
+            "ce_loss1": ce_loss1,
+            "ce_loss2": ce_loss2,
             "ce_loss3": ce_loss3,
             "total_loss": total_loss,
+            "acc1": acc1,
+            "acc2": acc2,
             "acc3": acc3,
         }
         return result_dict
@@ -83,7 +110,7 @@ if __name__ == "__main__":
     args = parse_args()
     pl.seed_everything(19)
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
-    checkpoint_callback = ModelCheckpoint(dirpath=args.checkpoint_dir,save_last=True)
+    checkpoint_callback = ModelCheckpoint(dirpath=args.checkpoint_dir, save_last=True)
     wandb_logger = WandbLogger(name=f"{args.run_name}", project=args.project, entity=args.entity, offline=args.offline)
     model = MSC(args)
 

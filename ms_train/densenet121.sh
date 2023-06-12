@@ -6,8 +6,8 @@ cd /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline
 --project Multi-Scale-CNN-HPO \
 --num_workers 8 \
 --batch_size 32 \
---checkpoint_dir checkpoints/densenet121-baseline \
---run_name densenet121-baseline \
+--checkpoint_dir checkpoints/densenet121-mstrain \
+--run_name densenet121-mstrain \
 --max_epochs 90 \
 --learning_rate 0.1 \
 --trunc 0.001
