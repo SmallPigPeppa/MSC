@@ -84,7 +84,7 @@ if __name__ == "__main__":
     pl.seed_everything(19)
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
     checkpoint_callback = ModelCheckpoint(dirpath=args.checkpoint_dir,save_last=True)
-    wandb_logger = WandbLogger(name=f"{args.run_name}_trunc:{args.trunc}", project=args.project, entity=args.entity, offline=args.offline)
+    wandb_logger = WandbLogger(name=f"{args.run_name}", project=args.project, entity=args.entity, offline=args.offline)
     model = MSC(args)
 
     if args.resume_from_checkpoint is not None:
