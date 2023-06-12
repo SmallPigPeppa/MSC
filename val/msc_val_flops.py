@@ -70,7 +70,7 @@ def test_resolutions(model, dataset_path, resolutions):
         print(
             f"Resolution: {res}, Accuracy1: {mean_acc1}, Accuracy2: {mean_acc2}, Accuracy3: {mean_acc3}, FLOPs:{flops}")
 
-    return res_list, acc1_list, acc2_list, acc3_list,acc_best_list, flops_list
+    return res_list, acc1_list, acc2_list, acc3_list, acc_best_list, flops_list
 
 
 if __name__ == "__main__":
@@ -106,12 +106,13 @@ if __name__ == "__main__":
     model = ResNet50.load_from_checkpoint(args.checkpoint_path, args=args)
 
     resolutions = list(range(32, 225, 16))
-    res_list, acc1_list, acc2_list, acc3_list,acc_best_list, flops_list = test_resolutions(model, args.dataset_path, resolutions)
+    res_list, acc1_list, acc2_list, acc3_list, acc_best_list, flops_list = test_resolutions(model, args.dataset_path,
+                                                                                            resolutions)
     columns = [str(i) for i in res_list] + ['size']
     acc_table = [acc1_list + ['acc1'], acc2_list + ['acc2'], acc3_list + ['acc3'],
-                      acc_best_list + ['acc_best']]
+                 acc_best_list + ['acc_best']]
 
     # wandb.log({"Resolution": res_list, "Accuracy1": acc1_list, "Accuracy2": acc2_list, "Accuracy3": acc3_list,
     #            "FLOPs": flops_list})
-    wandb_logger.log_table(key="acc", columns=model.columns, data=model.acc_table)
+    wandb_logger.log_table(key="acc", columns=columns, data=acc_table)
     wandb.finish()
