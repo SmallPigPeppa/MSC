@@ -9,6 +9,7 @@ from resnet50_l2_norm import ResNet50
 import torch.nn.functional as F
 from tqdm import tqdm
 from torchprofile import profile_macs
+from pytorch_lightning.loggers import WandbLogger
 
 
 def test_resolutions(model, dataset_path, resolutions):
@@ -29,6 +30,7 @@ def test_resolutions(model, dataset_path, resolutions):
     acc1_list = []
     acc2_list = []
     acc3_list = []
+    acc_best_list = []
     flops_list = []
     for res in resolutions:
         correct1 = 0
@@ -63,11 +65,12 @@ def test_resolutions(model, dataset_path, resolutions):
         acc1_list.append(mean_acc1)
         acc2_list.append(mean_acc2)
         acc3_list.append(mean_acc3)
+        acc_best_list.append(max(mean_acc1, mean_acc2, mean_acc3))
         res_list.append(res)
         print(
-            f"Resolution: {res}, Accuracy1: {mean_acc1}, Accuracy2: {mean_acc2}, Accuracy3: {mean_acc3}, FLOPs:{flops_list}")
+            f"Resolution: {res}, Accuracy1: {mean_acc1}, Accuracy2: {mean_acc2}, Accuracy3: {mean_acc3}, FLOPs:{flops}")
 
-    return res_list, acc1_list, acc2_list, acc3_list, flops_list
+    return res_list, acc1_list, acc2_list, acc3_list,acc_best_list, flops_list
 
 
 if __name__ == "__main__":
@@ -97,14 +100,18 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    wandb.init(name=args.run_name, project=args.project, entity=args.entity)
-    wandb_table = wandb.Table(columns=["Resolution", "Accuracy"])
+    wandb_logger = WandbLogger(name=args.run_name, project=args.project, entity=args.entity)
+    # wandb_table = wandb.Table(columns=["Resolution", "Accuracy"])
 
     model = ResNet50.load_from_checkpoint(args.checkpoint_path, args=args)
 
     resolutions = list(range(32, 225, 16))
-    res_list, acc1_list, acc2_list, acc3_list, flops_list = test_resolutions(model, args.dataset_path, resolutions)
+    res_list, acc1_list, acc2_list, acc3_list,acc_best_list, flops_list = test_resolutions(model, args.dataset_path, resolutions)
+    columns = [str(i) for i in res_list] + ['size']
+    acc_table = [acc1_list + ['acc1'], acc2_list + ['acc2'], acc3_list + ['acc3'],
+                      acc_best_list + ['acc_best']]
 
-    wandb.log({"Resolution": res_list, "Accuracy1": acc1_list, "Accuracy2": acc2_list, "Accuracy3": acc3_list,
-               "FLOPs": flops_list})
+    # wandb.log({"Resolution": res_list, "Accuracy1": acc1_list, "Accuracy2": acc2_list, "Accuracy3": acc3_list,
+    #            "FLOPs": flops_list})
+    wandb_logger.log_table(key="acc", columns=model.columns, data=model.acc_table)
     wandb.finish()
