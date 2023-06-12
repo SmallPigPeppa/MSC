@@ -13,50 +13,25 @@ import pytorch_lightning as pl
 from torchvision.models import vgg16,densenet121,inception_v3,mobilenet_v2
 from mobilenetv2_l3_subnet import sub_net1,sub_net2
 PRETRAINED=False
-LAYERS=10
-def unified_net():
-    u_net = mobilenet_v2(pretrained=PRETRAINED)
-    for i in range(LAYERS):
-        u_net.features[i] = nn.Identity()
-    return u_net
-
-def sub_net():
-    u_net = mobilenet_v2(pretrained=PRETRAINED)
-    sub_net_list=[]
-    for i in range(LAYERS):
-        sub_net_list.append(u_net.features[i])
-    return nn.Sequential(*sub_net_list)
 
 
 class MobileNetV2_L3(nn.Module):
     def __init__(self):
         super().__init__()
-        self.large_net = sub_net()
-        self.small_net = sub_net1()
-        self.mid_net = sub_net2()
-        self.unified_net = unified_net()
-        self.small_size = (32, 32)
-        self.mid_size = (128, 128)
-        self.large_size = (224, 224)
-        self.unified_size = (14, 14)
+        self.unified_net = mobilenet_v2(pretrained=PRETRAINED)
+
 
     def forward(self, imgs):
         small_imgs = F.interpolate(imgs, size=self.small_size, mode='bilinear')
         mid_imgs = F.interpolate(imgs, size=self.mid_size, mode='bilinear')
         large_imgs = F.interpolate(imgs, size=self.large_size, mode='bilinear')
 
-        z1 = self.small_net(small_imgs)
-        z2 = self.mid_net(mid_imgs)
-        z3 = self.large_net(large_imgs)
 
-        z1 = F.interpolate(z1, size=self.unified_size, mode='bilinear')
-        z2 = F.interpolate(z2, size=self.unified_size, mode='bilinear')
+        y1 = self.unified_net(small_imgs)
+        y2 = self.unified_net(mid_imgs)
+        y3 = self.unified_net(large_imgs)
 
-        y1 = self.unified_net(z1)
-        y2 = self.unified_net(z2)
-        y3 = self.unified_net(z3)
-
-        return z1, z2, z3, y1, y2, y3
+        return y1, y2, y3
 
 
 class MSC(LightningModule):
@@ -73,35 +48,21 @@ class MSC(LightningModule):
 
     def share_step(self, batch, batch_idx):
         x, y = batch
-        z1, z2, z3, y_hat1, y_hat2, y_hat3 = self(x)
+        y_hat1, y_hat2, y_hat3 = self(x)
 
         ce_loss1 = self.ce_loss(y_hat1, y)
         ce_loss2 = self.ce_loss(y_hat2, y)
         ce_loss3 = self.ce_loss(y_hat3, y)
 
-        si_loss1 = self.mse_loss(z1, z2)
-        si_loss2 = self.mse_loss(z1, z3)
-        si_loss3 = self.mse_loss(z2, z3)
 
-        if si_loss1 < self.args.trunc:
-            si_loss1 = 0
 
-        if si_loss2 < self.args.trunc:
-            si_loss2 = 0
-
-        if si_loss3 < self.args.trunc:
-            si_loss3 = 0
-
-        total_loss = si_loss1 + si_loss2 + si_loss3 + ce_loss1 + ce_loss2 + ce_loss3
+        total_loss =  ce_loss1 + ce_loss2 + ce_loss3
 
         acc1 = self.metrics_acc(y_hat1, y)
         acc2 = self.metrics_acc(y_hat2, y)
         acc3 = self.metrics_acc(y_hat3, y)
 
         result_dict = {
-            "si_loss1": si_loss1,
-            "si_loss2": si_loss2,
-            "si_loss3": si_loss3,
             "ce_loss1": ce_loss1,
             "ce_loss2": ce_loss2,
             "ce_loss3": ce_loss3,

@@ -10,7 +10,7 @@ from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 from args import parse_args
 import pytorch_lightning as pl
 from imagenet_dali import ClassificationDALIDataModule
-from torchvision.models import vgg16, densenet121, inception_v3, mobilenetv2, resnet50,vgg16_bn
+from torchvision.models import vgg16, densenet121, inception_v3, mobilenet_v2, resnet50,vgg16_bn
 
 PRETRAINED = False
 
@@ -19,7 +19,7 @@ class MSC(LightningModule):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        self.model = mobilenetv2(pretrained=PRETRAINED)
+        self.model = mobilenet_v2(pretrained=PRETRAINED)
         self.ce_loss = nn.CrossEntropyLoss()
         self.mse_loss = nn.MSELoss()
         self.metrics_acc = torchmetrics.Accuracy()

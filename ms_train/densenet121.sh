@@ -1,5 +1,5 @@
 export https_proxy=http://10.7.4.2:3128
-cd /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline
+cd /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/ms_train
 /root/miniconda3/envs/solo-learn/bin/python densenet121.py \
 --num_gpus 8 \
 --weight_decay 2e-5 \
