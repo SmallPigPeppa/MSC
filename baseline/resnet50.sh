@@ -1,5 +1,6 @@
 export https_proxy=http://10.7.4.2:3128
 cd /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline
+sleep 12000
 /root/miniconda3/envs/solo-learn/bin/python resnet50.py \
   --num_gpus 8 \
   --weight_decay 2e-5 \
