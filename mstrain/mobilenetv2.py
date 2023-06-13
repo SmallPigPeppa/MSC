@@ -19,6 +19,9 @@ class MobileNetV2_L3(nn.Module):
     def __init__(self):
         super().__init__()
         self.unified_net = mobilenet_v2(pretrained=PRETRAINED)
+        self.small_size = (32, 32)
+        self.mid_size = (128, 128)
+        self.large_size = (224, 224)
 
 
     def forward(self, imgs):

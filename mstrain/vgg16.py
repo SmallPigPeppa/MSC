@@ -19,6 +19,9 @@ class VGG16_L2(nn.Module):
     def __init__(self):
         super().__init__()
         self.unified_net = vgg16(pretrained=PRETRAINED)
+        self.small_size = (32, 32)
+        self.mid_size = (128, 128)
+        self.large_size = (224, 224)
 
     def forward(self, imgs):
         small_imgs = F.interpolate(imgs, size=self.small_size, mode='bilinear')
