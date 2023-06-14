@@ -108,9 +108,9 @@ if __name__ == "__main__":
     resolutions = list(range(32, 225, 16))
     res_list, acc1_list, acc2_list, acc3_list, acc_best_list, flops_list = test_resolutions(model, args.dataset_path,
                                                                                             resolutions)
-    columns = [str(i) for i in res_list] + ['size']
-    acc_table = [acc1_list + ['acc1'], acc2_list + ['acc2'], acc3_list + ['acc3'],
-                 acc_best_list + ['acc_best']]
+    columns = ['size'] + [str(i) for i in res_list]
+    acc_table = [['acc1'] + acc1_list, ['acc2'] + acc2_list, ['acc3'] + acc3_list,
+                 ['acc_best'] + acc_best_list]
 
     # wandb.log({"Resolution": res_list, "Accuracy1": acc1_list, "Accuracy2": acc2_list, "Accuracy3": acc3_list,
     #            "FLOPs": flops_list})
