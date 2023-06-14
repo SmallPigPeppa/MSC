@@ -58,9 +58,9 @@ def test_resolutions(model, dataset_path, resolutions):
                     # GFLOPs
                     flops_list.append(flops)
 
-        mean_acc1 = correct1 / total
-        mean_acc2 = correct2 / total
-        mean_acc3 = correct3 / total
+        mean_acc1 = correct1 / total * 100.
+        mean_acc2 = correct2 / total * 100.
+        mean_acc3 = correct3 / total * 100.
 
         acc1_list.append(mean_acc1)
         acc2_list.append(mean_acc2)
