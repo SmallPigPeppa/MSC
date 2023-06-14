@@ -29,6 +29,9 @@ class ResNet50_L2(LightningModule):
         mid_imgs = F.interpolate(imgs, size=self.mid_size, mode='bilinear')
         large_imgs = F.interpolate(imgs, size=self.large_size, mode='bilinear')
 
+        small_imgs = F.interpolate(small_imgs, size=self.large_size, mode='bilinear')
+        mid_imgs = F.interpolate(mid_imgs, size=self.large_size, mode='bilinear')
+
         y1 = self.unified_net(small_imgs)
         y2 = self.unified_net(mid_imgs)
         y3 = self.unified_net(large_imgs)
