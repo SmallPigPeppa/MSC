@@ -11,7 +11,7 @@ from imagenet_dali import ClassificationDALIDataModule
 from args import parse_args
 import pytorch_lightning as pl
 from torchvision.models import vgg16,densenet121,inception_v3,mobilenet_v2
-from mobilenetv2_l3_subnet import sub_net1,sub_net2
+
 PRETRAINED=False
 
 
