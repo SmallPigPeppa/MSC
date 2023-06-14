@@ -5,7 +5,7 @@ import torchvision
 import torchvision.transforms as transforms
 import wandb
 import torchmetrics
-from resnet50_l2_norm import ResNet50
+from baseline.resnet50 import MSC
 import torch.nn.functional as F
 from tqdm import tqdm
 from torchprofile import profile_macs
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     wandb_logger = WandbLogger(name=args.run_name, project=args.project, entity=args.entity)
     # wandb_table = wandb.Table(columns=["Resolution", "Accuracy"])
 
-    model = ResNet50.load_from_checkpoint(args.checkpoint_path, args=args)
+    model = MSC.load_from_checkpoint(args.checkpoint_path, args=args)
 
     resolutions = list(range(32, 225, 16))
     res_list, acc_list, flops_list = test_resolutions(model, args.dataset_path, resolutions)
