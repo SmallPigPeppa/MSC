@@ -36,6 +36,7 @@ def test_resolutions(model, dataset_path, resolutions):
             for idx, batch in tqdm(enumerate(dataloader)):
                 inputs, targets = batch
                 inputs = F.interpolate(inputs, size=int(res), mode='bilinear')
+                inputs = F.interpolate(inputs, size=224, mode='bilinear')
                 inputs, targets = inputs.to(device), targets.to(device)
                 y_hat = model(inputs)
                 acc = accuracy(y_hat, targets)
