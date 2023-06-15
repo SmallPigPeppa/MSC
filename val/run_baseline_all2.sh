@@ -4,30 +4,30 @@ export PYTHONPATH=/mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali
   --checkpoint_path /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline/checkpoints/resnet50-baseline/last.ckpt\
   --dataset_path /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
   --project msc-val\
-  --run_name resnet50-baseline\
-  --method resnet50-2
+  --run_name resnet50-baseline2\
+  --method resnet50
 
 /root/miniconda3/envs/solo-learn/bin/python  msc_val_baseline_all2.py \
   --checkpoint_path /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline/checkpoints/vgg16-bn-baseline/last.ckpt\
   --dataset_path /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
   --project msc-val\
-  --run_name vgg16-bn-baseline\
-  --method vgg16_bn-2
+  --run_name vgg16-bn-baseline2\
+  --method vgg16_bn
 
 
 /root/miniconda3/envs/solo-learn/bin/python  msc_val_baseline_all2.py \
   --checkpoint_path /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline/checkpoints/densenet121-baseline/last.ckpt\
   --dataset_path /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
   --project msc-val\
-  --run_name densenet121-baseline\
-  --method densenet121-2
+  --run_name densenet121-baseline2\
+  --method densenet121
 
 /root/miniconda3/envs/solo-learn/bin/python  msc_val_baseline_all2.py \
   --checkpoint_path /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline/checkpoints/mobilenetv2-baseline/last.ckpt\
   --dataset_path /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
   --project msc-val\
-  --run_name mobilenetv2-baseline\
-#  --method mobilenetv2-2
+  --run_name mobilenetv2-baseline2\
+#  --method mobilenetv2
 
 #      elif args.method == 'resnext50':
 #        from torchvision.models import resnext50_32x4d
@@ -45,28 +45,28 @@ export PYTHONPATH=/mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali
   --checkpoint_path /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline/checkpoints/vgg16-bn-baseline/last.ckpt\
   --dataset_path /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
   --project msc-val\
-  --run_name resnext50-baseline\
-  --method resnext50-2
+  --run_name resnext50-baseline2\
+  --method resnext50
 
 
 /root/miniconda3/envs/solo-learn/bin/python  msc_val_baseline_all2.py \
   --checkpoint_path /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline/checkpoints/densenet121-baseline/last.ckpt\
   --dataset_path /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
   --project msc-val\
-  --run_name googlenet-baseline\
-  --method googlenet-2
+  --run_name googlenet-baseline2\
+  --method googlenet
 
 /root/miniconda3/envs/solo-learn/bin/python  msc_val_baseline_all2.py \
   --checkpoint_path /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline/checkpoints/mobilenetv2-baseline/last.ckpt\
   --dataset_path /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
   --project msc-val\
-  --run_name nceptionv3-baseline\
-  --method nceptionv3-2
+  --run_name nceptionv3-baseline2\
+  --method nceptionv3
 
 /root/miniconda3/envs/solo-learn/bin/python  msc_val_baseline_all2.py \
   --checkpoint_path /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline/checkpoints/mobilenetv2-baseline/last.ckpt\
   --dataset_path /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
   --project msc-val\
-  --run_name alexnet-baseline\
-  --method alexnet-2
+  --run_name alexnet-baseline2\
+  --method alexnet
 
