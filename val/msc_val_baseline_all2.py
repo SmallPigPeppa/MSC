@@ -115,7 +115,7 @@ if __name__ == "__main__":
         from torchvision.models import alexnet
         model = alexnet(pretrained=True)
 
-    resolutions = list(range(32, 225, 16))
+    resolutions = list(range(64, 225, 16))
     res_list, acc_list, flops_list = test_resolutions(model, args.dataset_path, resolutions)
     columns = ['size'] + [str(i) for i in res_list]
     acc_table = [['acc1'] + acc_list]
