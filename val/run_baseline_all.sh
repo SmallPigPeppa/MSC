@@ -41,27 +41,27 @@ export PYTHONPATH=/mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali
 #    elif args.method == 'alexnet':
 
 
-/root/miniconda3/envs/solo-learn/bin/python  msc_val_baseline_all.py \
-  --checkpoint_path /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline/checkpoints/vgg16-bn-baseline/last.ckpt\
-  --dataset_path /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
-  --project msc-val\
-  --run_name resnext50-baseline\
-  --method resnext50
-
-
-/root/miniconda3/envs/solo-learn/bin/python  msc_val_baseline_all.py \
-  --checkpoint_path /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline/checkpoints/densenet121-baseline/last.ckpt\
-  --dataset_path /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
-  --project msc-val\
-  --run_name googlenet-baseline\
-  --method googlenet
+#/root/miniconda3/envs/solo-learn/bin/python  msc_val_baseline_all.py \
+#  --checkpoint_path /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline/checkpoints/vgg16-bn-baseline/last.ckpt\
+#  --dataset_path /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
+#  --project msc-val\
+#  --run_name resnext50-baseline\
+#  --method resnext50
+#
+#
+#/root/miniconda3/envs/solo-learn/bin/python  msc_val_baseline_all.py \
+#  --checkpoint_path /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline/checkpoints/densenet121-baseline/last.ckpt\
+#  --dataset_path /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
+#  --project msc-val\
+#  --run_name googlenet-baseline\
+#  --method googlenet
 
 /root/miniconda3/envs/solo-learn/bin/python  msc_val_baseline_all.py \
   --checkpoint_path /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline/checkpoints/mobilenetv2-baseline/last.ckpt\
   --dataset_path /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
   --project msc-val\
-  --run_name nceptionv3-baseline\
-  --method nceptionv3
+  --run_name inceptionv3-baseline\
+  --method inceptionv3
 
 /root/miniconda3/envs/solo-learn/bin/python  msc_val_baseline_all.py \
   --checkpoint_path /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline/checkpoints/mobilenetv2-baseline/last.ckpt\
