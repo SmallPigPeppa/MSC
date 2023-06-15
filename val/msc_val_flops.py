@@ -5,7 +5,8 @@ import torchvision
 import torchvision.transforms as transforms
 import wandb
 import torchmetrics
-from resnet50_l2_norm import ResNet50
+# from resnet50_l2_norm import ResNet50
+from resnet50_l2_last import ResNet50
 import torch.nn.functional as F
 from tqdm import tqdm
 from torchprofile import profile_macs
