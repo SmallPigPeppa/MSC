@@ -108,16 +108,16 @@ if __name__ == "__main__":
         model = ResNet50.load_from_checkpoint(args.checkpoint_path, args=args)
     elif args.method == 'densenet121':
         #checkpoints/densenet121-l2-seprate-trans
-        from densenet121_l2_seprate_trans import DenseNet121_L2
-        model = DenseNet121_L2.load_from_checkpoint(args.checkpoint_path, args=args)
+        from densenet121_l2_seprate_trans import MSC
+        model = MSC.load_from_checkpoint(args.checkpoint_path, args=args)
     elif args.method == 'vgg16':
         #checkpoints/vgg16-l2-new
-        from vgg16_l3 import VGG16_L2
-        model = VGG16_L2.load_from_checkpoint(args.checkpoint_path, args=args)
+        from vgg16_l3 import MSC
+        model = MSC.load_from_checkpoint(args.checkpoint_path, args=args)
     elif args.method == 'mobilenetv2':
         #checkpoints/mobilenetv2-l3-wd2
-        from mobilenetv2_l3 import MobileNetV2_L3
-        model = MobileNetV2_L3.load_from_checkpoint(args.checkpoint_path, args=args)
+        from mobilenetv2_l3 import MSC
+        model = MSC.load_from_checkpoint(args.checkpoint_path, args=args)
 
 
 
