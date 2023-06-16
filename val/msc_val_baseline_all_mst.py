@@ -38,24 +38,24 @@ def test_resolutions(model, dataset_path, resolutions):
                 inputs = F.interpolate(inputs, size=int(res), mode='bilinear')
                 inputs = F.interpolate(inputs, size=224, mode='bilinear')
                 inputs, targets = inputs.to(device), targets.to(device)
-                y_hat = model(inputs)
+                _,_,y_hat = model(inputs)
                 acc = accuracy(y_hat, targets)
                 correct += acc.item() * inputs.size(0)
                 total += inputs.size(0)
 
-                # if idx == 0:
-                #     macs = profile_macs(model, inputs)
-                #     flops = macs / 1e9
-                #     # GFLOPs
-                #     flops_list.append(flops)
+                if idx == 0:
+                    macs = profile_macs(model, inputs)
+                    flops = macs / 1e9
+                    # GFLOPs
+                    flops_list.append(flops)
 
         mean_acc = correct / total * 100.
         acc_list.append(mean_acc)
         res_list.append(res)
-        # print(
-        #     f"Resolution: {res}, Accuracy: {mean_acc}, FLOPs:{flops}")
         print(
-            f"Resolution: {res}, Accuracy: {mean_acc}")
+            f"Resolution: {res}, Accuracy: {mean_acc}, FLOPs:{flops}")
+        # print(
+        #     f"Resolution: {res}, Accuracy: {mean_acc}")
 
     return res_list, acc_list, flops_list
 
