@@ -91,8 +91,8 @@ if __name__ == "__main__":
     # wandb_table = wandb.Table(columns=["Resolution", "Accuracy"])
 
     if args.method == 'resnet50':
-        from mstrain.resnet50 import MSC
-        model = MSC.load_from_checkpoint(args.checkpoint_path, args=args)
+        from mstrain.resnet50 import ResNet50
+        model = ResNet50.load_from_checkpoint(args.checkpoint_path, args=args)
     elif args.method == 'vgg16_bn':
         from mstrain.vgg16_bn import MSC
         model = MSC.load_from_checkpoint(args.checkpoint_path, args=args)
