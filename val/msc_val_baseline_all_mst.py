@@ -43,11 +43,11 @@ def test_resolutions(model, dataset_path, resolutions):
                 correct += acc.item() * inputs.size(0)
                 total += inputs.size(0)
 
-                if idx == 0:
-                    macs = profile_macs(model, inputs)
-                    flops = macs / 1e9
-                    # GFLOPs
-                    flops_list.append(flops)
+                # if idx == 0:
+                #     macs = profile_macs(model, inputs)
+                #     flops = macs / 1e9
+                #     # GFLOPs
+                #     flops_list.append(flops)
 
         mean_acc = correct / total * 100.
         acc_list.append(mean_acc)
