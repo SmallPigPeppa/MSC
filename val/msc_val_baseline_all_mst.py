@@ -52,8 +52,10 @@ def test_resolutions(model, dataset_path, resolutions):
         mean_acc = correct / total * 100.
         acc_list.append(mean_acc)
         res_list.append(res)
+        # print(
+        #     f"Resolution: {res}, Accuracy: {mean_acc}, FLOPs:{flops}")
         print(
-            f"Resolution: {res}, Accuracy: {mean_acc}, FLOPs:{flops}")
+            f"Resolution: {res}, Accuracy: {mean_acc}")
 
     return res_list, acc_list, flops_list
 
