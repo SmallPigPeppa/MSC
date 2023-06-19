@@ -7,22 +7,23 @@ from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
+from imagenet_dali import ClassificationDALIDataModule
 from args import parse_args
 import pytorch_lightning as pl
-from imagenet_dali import ClassificationDALIDataModule
-# from torchvision.models import vgg16,densenet121,inception_v3,mobilenetv2
-from torchvision.models import resnet50,resnext50_32x4d,googlenet,inception_v3,alexnet
-PRETRAINED=False
+from torchvision.models import vgg16, densenet121, inception_v3, mobilenetv2, vgg16_bn
+
+PRETRAINED = False
 
 
 
-class DenseNet121_L2(nn.Module):
+class VGG16_L2(nn.Module):
     def __init__(self):
         super().__init__()
-        self.unified_net = googlenet(pretrained=PRETRAINED)
+        self.unified_net = vgg16_bn(pretrained=PRETRAINED)
         self.small_size = (32, 32)
         self.mid_size = (128, 128)
         self.large_size = (224, 224)
+
 
     def forward(self, imgs):
         small_imgs = F.interpolate(imgs, size=self.small_size, mode='bilinear')
@@ -31,6 +32,8 @@ class DenseNet121_L2(nn.Module):
 
         small_imgs = F.interpolate(small_imgs, size=self.large_size, mode='bilinear')
         mid_imgs = F.interpolate(mid_imgs, size=self.large_size, mode='bilinear')
+
+
 
         y1 = self.unified_net(small_imgs)
         y2 = self.unified_net(mid_imgs)
@@ -43,11 +46,10 @@ class MSC(LightningModule):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        self.model = DenseNet121_L2()
+        self.model = VGG16_L2()
         self.ce_loss = nn.CrossEntropyLoss()
         self.mse_loss = nn.MSELoss()
         self.metrics_acc = torchmetrics.Accuracy()
-        # trunc
 
     def forward(self, x):
         return self.model(x)
@@ -59,7 +61,6 @@ class MSC(LightningModule):
         ce_loss1 = self.ce_loss(y_hat1, y)
         ce_loss2 = self.ce_loss(y_hat2, y)
         ce_loss3 = self.ce_loss(y_hat3, y)
-
 
 
         total_loss = ce_loss1 + ce_loss2 + ce_loss3
@@ -103,21 +104,19 @@ class MSC(LightningModule):
         )
         return [optimizer], [scheduler]
 
-# if __name__=="__main__":
-#     model=vgg16()
-#     model=densenet121()
-#     a=torch.rand(8,3,224,224)
-#     model=DenseNet121_L2()
-#
-#     b=model(a)
+
+# if __name__ == "__main__":
+#     a = torch.rand(8, 3, 224, 224)
+#     model = VGG16_L2()
+#     b = model(a)
 #     for bi in b:
 #         print(bi.shape)
-
+# #
 if __name__ == "__main__":
     args = parse_args()
     pl.seed_everything(19)
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
-    checkpoint_callback = ModelCheckpoint(dirpath=args.checkpoint_dir, save_last=True)
+    checkpoint_callback = ModelCheckpoint(dirpath=args.checkpoint_dir,save_last=True)
     wandb_logger = WandbLogger(name=f"{args.run_name}", project=args.project, entity=args.entity, offline=args.offline)
     model = MSC(args)
 
