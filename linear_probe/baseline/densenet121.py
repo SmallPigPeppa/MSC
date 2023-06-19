@@ -21,12 +21,14 @@ class MSC(LightningModule):
         super().__init__()
         self.args = args
         self.model = densenet121(pretrained=PRETRAINED)
-        self.num_features = self.model.classifier.weight.shape[1]
-        self.model.classifier = nn.Identity()
-        self.classifier = nn.Linear(self.num_features, args.num_classes)
         self.ce_loss = nn.CrossEntropyLoss()
         self.mse_loss = nn.MSELoss()
         self.metrics_acc = torchmetrics.Accuracy()
+
+    def initial_classifier(self):
+        self.num_features = self.model.classifier.weight.shape[1]
+        self.model.classifier = nn.Identity()
+        self.classifier = nn.Linear(self.num_features, args.num_classes)
 
     def forward(self, x):
         x = F.interpolate(x, size=224, mode='bilinear')
@@ -91,8 +93,8 @@ if __name__ == "__main__":
     pl.seed_everything(19)
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
     checkpoint_callback = ModelCheckpoint(dirpath=args.checkpoint_dir, save_last=True)
-    wandb_logger = WandbLogger(name=f"{args.run_name}-{args.dataset}", project=args.project, entity=args.entity, offline=args.offline)
-
+    wandb_logger = WandbLogger(name=f"{args.run_name}-{args.dataset}", project=args.project, entity=args.entity,
+                               offline=args.offline)
 
     if args.dataset == 'cifar10':
         dataset_train, dataset_test = get_cifar10(data_path=args.dataset_path)
@@ -101,13 +103,11 @@ if __name__ == "__main__":
     train_dataloader = DataLoader(dataset_train, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
     val_dataloader = DataLoader(dataset_test, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
 
-
     model = MSC.load_from_checkpoint(args.checkpoint_path, args=args)
+    model.initial_classifier()
     trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
                                          callbacks=[checkpoint_callback, lr_monitor], precision=16,
                                          # gradient_clip_val=1.0,
                                          check_val_every_n_epoch=args.eval_every)
-
-
 
     trainer.fit(model, train_dataloader=train_dataloader, val_dataloaders=val_dataloader)
