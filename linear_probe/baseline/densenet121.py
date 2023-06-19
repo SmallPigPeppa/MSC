@@ -92,12 +92,7 @@ if __name__ == "__main__":
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
     checkpoint_callback = ModelCheckpoint(dirpath=args.checkpoint_dir, save_last=True)
     wandb_logger = WandbLogger(name=f"{args.run_name}-{args.dataset}", project=args.project, entity=args.entity, offline=args.offline)
-    model = MSC.load_from_checkpoint(args.checkpoint_path, args=args)
 
-    trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
-                                         callbacks=[checkpoint_callback, lr_monitor], precision=16,
-                                         # gradient_clip_val=1.0,
-                                         check_val_every_n_epoch=args.eval_every)
 
     if args.dataset == 'cifar10':
         dataset_train, dataset_test = get_cifar10(data_path=args.dataset_path)
@@ -105,5 +100,14 @@ if __name__ == "__main__":
 
     train_dataloader = DataLoader(dataset_train, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
     val_dataloader = DataLoader(dataset_test, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
+
+
+    model = MSC.load_from_checkpoint(args.checkpoint_path, args=args)
+    trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
+                                         callbacks=[checkpoint_callback, lr_monitor], precision=16,
+                                         # gradient_clip_val=1.0,
+                                         check_val_every_n_epoch=args.eval_every)
+
+
 
     trainer.fit(model, train_dataloader=train_dataloader, val_dataloaders=val_dataloader)
