@@ -15,12 +15,13 @@ if __name__ == "__main__":
     from torchvision.models import inception_v3
 
     model = inception_v3(pretrained=True)
+    model.eval()
 
     from torchvision.models import alexnet
 
-    model = alexnet(pretrained=True)
+    # model = alexnet(pretrained=True)
 
     resolutions = list(range(32, 225, 16))
-    input = torch.rand([4, 3, 32, 32])
+    input = torch.rand([4, 3, 224, 224])
     output = model(input)
     a = 0

@@ -6,14 +6,14 @@ import torch.nn.functional as F
 from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
-from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
+# from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 from args import parse_args
 import pytorch_lightning as pl
-from imagenet_dali import ClassificationDALIDataModule
+# from imagenet_dali import ClassificationDALIDataModule
 # from torchvision.models import vgg16,densenet121,inception_v3,mobilenetv2
-from torchvision.models import resnet50,resnext50_32x4d,googlenet,inception_v3,alexnet
-PRETRAINED=True
+from torchvision.models import resnet50, resnext50_32x4d, googlenet, inception_v3, alexnet
 
+PRETRAINED = True
 
 
 class DenseNet121_L2(nn.Module):
@@ -60,8 +60,6 @@ class MSC(LightningModule):
         ce_loss2 = self.ce_loss(y_hat2, y)
         ce_loss3 = self.ce_loss(y_hat3, y)
 
-
-
         total_loss = ce_loss1 + ce_loss2 + ce_loss3
 
         acc1 = self.metrics_acc(y_hat1, y)
@@ -103,58 +101,59 @@ class MSC(LightningModule):
         )
         return [optimizer], [scheduler]
 
-# if __name__=="__main__":
-#     model=vgg16()
-#     model=densenet121()
-#     a=torch.rand(8,3,224,224)
-#     model=DenseNet121_L2()
-#
-#     b=model(a)
-#     for bi in b:
-#         print(bi.shape)
 
 if __name__ == "__main__":
-    args = parse_args()
-    pl.seed_everything(19)
-    lr_monitor = LearningRateMonitor(logging_interval="epoch")
-    checkpoint_callback = ModelCheckpoint(dirpath=args.checkpoint_dir, save_last=True)
-    wandb_logger = WandbLogger(name=f"{args.run_name}", project=args.project, entity=args.entity, offline=args.offline)
-    model = MSC(args)
+    # model=vgg16()
+    # model=DenseNet121_L2()
+    a = torch.rand(8, 3, 224, 224)
+    model = DenseNet121_L2()
 
-    if args.resume_from_checkpoint is not None:
-        trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
-                                             callbacks=[checkpoint_callback, lr_monitor],
-                                             resume_from_checkpoint=args.resume_from_checkpoint, precision=16,
-                                             # gradient_clip_val=1.0,
-                                             check_val_every_n_epoch=args.eval_every)
-    else:
-        trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
-                                             callbacks=[checkpoint_callback, lr_monitor], precision=16,
-                                             # gradient_clip_val=1.0,
-                                             check_val_every_n_epoch=args.eval_every)
-
-    try:
-        from pytorch_lightning.loops import FitLoop
-
-
-        class WorkaroundFitLoop(FitLoop):
-            @property
-            def prefetch_batches(self) -> int:
-                return 1
-
-
-        trainer.fit_loop = WorkaroundFitLoop(
-            trainer.fit_loop.min_epochs, trainer.fit_loop.max_epochs
-        )
-    except:
-        pass
-
-    dali_datamodule = ClassificationDALIDataModule(
-        train_data_path=os.path.join(args.dataset_path, 'train'),
-        val_data_path=os.path.join(args.dataset_path, 'val'),
-        num_workers=args.num_workers,
-        batch_size=args.batch_size)
-
-    trainer.fit(model, datamodule=dali_datamodule)
-
-
+    b = model(a)
+    for bi in b:
+        print(bi.shape)
+#
+# if __name__ == "__main__":
+#     args = parse_args()
+#     pl.seed_everything(19)
+#     lr_monitor = LearningRateMonitor(logging_interval="epoch")
+#     checkpoint_callback = ModelCheckpoint(dirpath=args.checkpoint_dir, save_last=True)
+#     wandb_logger = WandbLogger(name=f"{args.run_name}", project=args.project, entity=args.entity, offline=args.offline)
+#     model = MSC(args)
+#
+#     if args.resume_from_checkpoint is not None:
+#         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
+#                                              callbacks=[checkpoint_callback, lr_monitor],
+#                                              resume_from_checkpoint=args.resume_from_checkpoint, precision=16,
+#                                              # gradient_clip_val=1.0,
+#                                              check_val_every_n_epoch=args.eval_every)
+#     else:
+#         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
+#                                              callbacks=[checkpoint_callback, lr_monitor], precision=16,
+#                                              # gradient_clip_val=1.0,
+#                                              check_val_every_n_epoch=args.eval_every)
+#
+#     try:
+#         from pytorch_lightning.loops import FitLoop
+#
+#
+#         class WorkaroundFitLoop(FitLoop):
+#             @property
+#             def prefetch_batches(self) -> int:
+#                 return 1
+#
+#
+#         trainer.fit_loop = WorkaroundFitLoop(
+#             trainer.fit_loop.min_epochs, trainer.fit_loop.max_epochs
+#         )
+#     except:
+#         pass
+#
+#     dali_datamodule = ClassificationDALIDataModule(
+#         train_data_path=os.path.join(args.dataset_path, 'train'),
+#         val_data_path=os.path.join(args.dataset_path, 'val'),
+#         num_workers=args.num_workers,
+#         batch_size=args.batch_size)
+#
+#     trainer.fit(model, datamodule=dali_datamodule)
+#
+#

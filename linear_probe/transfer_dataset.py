@@ -70,6 +70,200 @@ def get_fashion_mnist(data_path):
     return fashion_mnist_train, fashion_mnist_test
 
 
+def get_caltech101(data_path):
+    transform_train = transforms.Compose(
+        [
+            transforms.RandomResizedCrop(size=96, scale=(0.08, 1.0)),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
+        ]
+    )
+    transform_test = transforms.Compose(
+        [
+            transforms.Resize((96, 96)),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
+        ]
+    )
+    dataset_train = datasets.Caltech101(root=data_path, target_type='category', download=True,
+                                        transform=transform_train)
+    dataset_test = datasets.Caltech101(root=data_path, target_type='category', download=True,
+                                       transform=transform_train)
+    return dataset_train, dataset_test
+    # stl10_test = datasets.Caltech101(root=data_path, split='test', download=True, transform=transform_test)
+    # return stl10_train, stl10_test
+
+
+def get_cars(data_path):
+    transform_train = transforms.Compose(
+        [
+            transforms.RandomResizedCrop(size=96, scale=(0.08, 1.0)),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
+        ]
+    )
+    transform_test = transforms.Compose(
+        [
+            transforms.Resize((96, 96)),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
+        ]
+    )
+    dataset_train = datasets.StanfordCars(root=data_path, split='train', download=True, transform=transform_train)
+    dataset_test = datasets.StanfordCars(root=data_path, split='test', download=True, transform=transform_test)
+    return dataset_train, dataset_test
+
+
+def get_aircraft(data_path):
+    transform_train = transforms.Compose(
+        [
+            transforms.RandomResizedCrop(size=96, scale=(0.08, 1.0)),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
+        ]
+    )
+    transform_test = transforms.Compose(
+        [
+            transforms.Resize((96, 96)),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
+        ]
+    )
+    dataset_train = datasets.FGVCAircraft(root=data_path, split='train', download=True, transform=transform_train)
+    dataset_test = datasets.FGVCAircraft(root=data_path, split='test', download=True, transform=transform_test)
+    return dataset_train, dataset_test
+
+def get_sun397(data_path):
+    transform_train = transforms.Compose(
+        [
+            transforms.RandomResizedCrop(size=96, scale=(0.08, 1.0)),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
+        ]
+    )
+    transform_test = transforms.Compose(
+        [
+            transforms.Resize((96, 96)),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
+        ]
+    )
+    dataset_train = datasets.SUN397(root=data_path, download=True, transform=transform_train)
+    dataset_test = datasets.SUN397(root=data_path, download=True, transform=transform_test)
+    return dataset_train, dataset_test
+
+def get_pcam(data_path):
+    transform_train = transforms.Compose(
+        [
+            transforms.RandomResizedCrop(size=96, scale=(0.08, 1.0)),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
+        ]
+    )
+    transform_test = transforms.Compose(
+        [
+            transforms.Resize((96, 96)),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
+        ]
+    )
+    dataset_train = datasets.PCAM(root=data_path, split='train', download=True, transform=transform_train)
+    dataset_test = datasets.PCAM(root=data_path, split='train', download=True, transform=transform_train)
+    return dataset_train, dataset_test
+
+def get_pcam(data_path):
+    transform_train = transforms.Compose(
+        [
+            transforms.RandomResizedCrop(size=96, scale=(0.08, 1.0)),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
+        ]
+    )
+    transform_test = transforms.Compose(
+        [
+            transforms.Resize((96, 96)),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
+        ]
+    )
+    dataset_train = datasets.PCAM(root=data_path, split='train', download=True, transform=transform_train)
+    dataset_test = datasets.PCAM(root=data_path, split='train', download=True, transform=transform_test)
+    return dataset_train, dataset_test
+
+def get_dtd(data_path):
+    transform_train = transforms.Compose(
+        [
+            transforms.RandomResizedCrop(size=96, scale=(0.08, 1.0)),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
+        ]
+    )
+    transform_test = transforms.Compose(
+        [
+            transforms.Resize((96, 96)),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
+        ]
+    )
+    dataset_train = datasets.DTD(root=data_path, split='train', download=True, transform=transform_train)
+    dataset_test = datasets.DTD(root=data_path, split='train', download=True, transform=transform_test)
+    return dataset_train, dataset_test
+
+def get_pets(data_path):
+    transform_train = transforms.Compose(
+        [
+            transforms.RandomResizedCrop(size=96, scale=(0.08, 1.0)),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
+        ]
+    )
+    transform_test = transforms.Compose(
+        [
+            transforms.Resize((96, 96)),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
+        ]
+    )
+    dataset_train = datasets.OxfordIIITPet(root=data_path, split='trainval', download=True,target_types='category', transform=transform_train)
+    dataset_test = datasets.OxfordIIITPet(root=data_path, split='test', download=True, target_types='category', transform=transform_test)
+    return dataset_train, dataset_test
+
+def get_flowers(data_path):
+    transform_train = transforms.Compose(
+        [
+            transforms.RandomResizedCrop(size=96, scale=(0.08, 1.0)),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
+        ]
+    )
+    transform_test = transforms.Compose(
+        [
+            transforms.Resize((96, 96)),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
+        ]
+    )
+    dataset_train = datasets.Flowers102(root=data_path, split='train', download=True, transform=transform_train)
+    dataset_test = datasets.Flowers102(root=data_path, split='test', download=True, transform=transform_test)
+    return dataset_train, dataset_test
+
+
+
+if __name__ == '__main__':
+    # a, b = get_caltech101(data_path='/Users/lwz/torch_ds')
+    # a, b = get_cars(data_path='/Users/lwz/torch_ds')
+    a, b = get_aircraft(data_path='/Users/lwz/torch_ds')
+    c = 0
+
 """
 Caltech101：这个数据集包含101个类别的图像，每个类别大约有40到800张图像。图像的大小不同，但大部分的图像的分辨率都低于224x224。
 
@@ -97,19 +291,35 @@ StanfordCars：这个数据集包含8144张训练图像和8041张测试图像，
 
 SUN397：这是一个场景识别的数据集，包含397个类别，每个类别有100张图像。图像的尺寸不一，但大多数都小于224x224。
 """
+
+
 def get_Caltech101():
     pass
+
+
 def get_Caltech256():
     pass
+
+
 def get_CelebA():
     pass
+
+
 def get_EuroSAT():
     pass
+
+
 def get_FGVCAircraft():
     pass
+
+
 def get_PCAM():
     pass
+
+
 def get_StanfordCars():
     pass
+
+
 def get_SUN397():
     pass
