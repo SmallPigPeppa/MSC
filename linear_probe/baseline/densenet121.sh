@@ -1,4 +1,6 @@
 export https_proxy=http://10.7.4.2:3128
+
+
 /root/miniconda3/envs/solo-learn/bin/python densenet121.py \
   --num_gpus 2 \
   --weight_decay 2e-5 \
@@ -10,3 +12,4 @@ export https_proxy=http://10.7.4.2:3128
   --run_name densenet121 \
   --max_epochs 90 \
   --learning_rate 0.1
+

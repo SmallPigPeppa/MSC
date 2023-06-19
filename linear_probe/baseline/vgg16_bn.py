@@ -9,7 +9,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 from args import parse_args
 import pytorch_lightning as pl
-from torchvision.models import vgg16, densenet121, inception_v3, mobilenetv2, resnet50
+from torchvision.models import vgg16, densenet121, inception_v3, mobilenetv2, vgg16_bn
 from torch.utils.data import DataLoader
 from transfer_dataset import *
 
@@ -20,15 +20,26 @@ class MSC(LightningModule):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        self.model = resnet50(pretrained=PRETRAINED)
+        self.model = vgg16_bn(pretrained=PRETRAINED)
         self.ce_loss = nn.CrossEntropyLoss()
         self.mse_loss = nn.MSELoss()
         self.metrics_acc = torchmetrics.Accuracy()
 
     def initial_classifier(self):
-        self.num_features = self.model.fc.weight.shape[1]
-        self.model.fc = nn.Identity()
-        self.classifier = nn.Linear(self.num_features, args.num_classes)
+        # self.num_features = self.model.classifier.weight.shape[1]
+        self.model.classifier = nn.Identity()
+        dropout = 0.5
+        num_classes = args.num_classes
+        # self.classifier = nn.Linear(self.num_features, args.num_classes)
+        self.classifier = nn.Sequential(
+            nn.Linear(512 * 7 * 7, 4096),
+            nn.ReLU(True),
+            nn.Dropout(p=dropout),
+            nn.Linear(4096, 4096),
+            nn.ReLU(True),
+            nn.Dropout(p=dropout),
+            nn.Linear(4096, num_classes),
+        )
 
     def forward(self, x):
         x = F.interpolate(x, size=224, mode='bilinear')
@@ -97,12 +108,6 @@ if __name__ == "__main__":
                                offline=args.offline)
 
     if args.dataset == 'cifar10':
-        dataset_train, dataset_test = get_cifar10(data_path=args.dataset_path)
-        args.num_classes = 10
-    if args.dataset == 'cifar100':
-        dataset_train, dataset_test = get_cifar10(data_path=args.dataset_path)
-        args.num_classes = 100
-    if args.dataset == 'stl10':
         dataset_train, dataset_test = get_cifar10(data_path=args.dataset_path)
         args.num_classes = 10
 

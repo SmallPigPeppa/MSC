@@ -9,7 +9,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 from args import parse_args
 import pytorch_lightning as pl
-from torchvision.models import vgg16, densenet121, inception_v3, mobilenetv2, resnet50
+from torchvision.models import vgg16, densenet121, inception_v3, mobilenet_v2
 from torch.utils.data import DataLoader
 from transfer_dataset import *
 
@@ -20,14 +20,14 @@ class MSC(LightningModule):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        self.model = resnet50(pretrained=PRETRAINED)
+        self.model = mobilenet_v2(pretrained=PRETRAINED)
         self.ce_loss = nn.CrossEntropyLoss()
         self.mse_loss = nn.MSELoss()
         self.metrics_acc = torchmetrics.Accuracy()
 
     def initial_classifier(self):
-        self.num_features = self.model.fc.weight.shape[1]
-        self.model.fc = nn.Identity()
+        self.num_features = self.model.classifier.weight.shape[1]
+        self.model.classifier = nn.Identity()
         self.classifier = nn.Linear(self.num_features, args.num_classes)
 
     def forward(self, x):
@@ -97,12 +97,6 @@ if __name__ == "__main__":
                                offline=args.offline)
 
     if args.dataset == 'cifar10':
-        dataset_train, dataset_test = get_cifar10(data_path=args.dataset_path)
-        args.num_classes = 10
-    if args.dataset == 'cifar100':
-        dataset_train, dataset_test = get_cifar10(data_path=args.dataset_path)
-        args.num_classes = 100
-    if args.dataset == 'stl10':
         dataset_train, dataset_test = get_cifar10(data_path=args.dataset_path)
         args.num_classes = 10
 
