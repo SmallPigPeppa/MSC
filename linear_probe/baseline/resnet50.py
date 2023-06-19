@@ -26,8 +26,8 @@ class MSC(LightningModule):
         self.metrics_acc = torchmetrics.Accuracy()
 
     def initial_classifier(self):
-        self.num_features = self.model.classifier.weight.shape[1]
-        self.model.classifier = nn.Identity()
+        self.num_features = self.model.fc.weight.shape[1]
+        self.model.fc = nn.Identity()
         self.classifier = nn.Linear(self.num_features, args.num_classes)
 
     def forward(self, x):
