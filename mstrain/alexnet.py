@@ -10,16 +10,16 @@ from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 from imagenet_dali import ClassificationDALIDataModule
 from args import parse_args
 import pytorch_lightning as pl
-from torchvision.models import vgg16, densenet121, inception_v3, mobilenetv2, vgg16_bn
+from torchvision.models import resnet50,resnext50_32x4d,googlenet,inception_v3,alexnet
 
-PRETRAINED = False
+PRETRAINED = True
 
 
 
 class VGG16_L2(nn.Module):
     def __init__(self):
         super().__init__()
-        self.unified_net = vgg16_bn(pretrained=PRETRAINED)
+        self.unified_net = alexnet(pretrained=PRETRAINED)
         self.small_size = (32, 32)
         self.mid_size = (128, 128)
         self.large_size = (224, 224)

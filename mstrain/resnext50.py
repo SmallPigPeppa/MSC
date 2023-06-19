@@ -13,14 +13,14 @@ import pytorch_lightning as pl
 from imagenet_dali import ClassificationDALIDataModule
 from torchvision.models import resnet50,resnext50_32x4d,googlenet,inception_v3,alexnet
 
-
+PRETRAINED = True
 
 
 
 class ResNet50_L2(LightningModule):
     def __init__(self):
         super().__init__()
-        self.unified_net = resnext50_32x4d(pretrained=False)
+        self.unified_net = resnext50_32x4d(pretrained=PRETRAINED)
         self.small_size = (32, 32)
         self.mid_size = (128, 128)
         self.large_size = (224, 224)

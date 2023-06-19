@@ -9,5 +9,5 @@ cd /mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/mstrain
 --checkpoint_dir checkpoints/alexnet-mstrain \
 --run_name alexnet-mstrain \
 --max_epochs 90 \
---learning_rate 0.1 \
+--learning_rate 0.05 \
 --trunc 0.001
