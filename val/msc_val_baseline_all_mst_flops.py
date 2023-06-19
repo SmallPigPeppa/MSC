@@ -41,15 +41,12 @@ def test_resolutions(model, dataset_path, resolutions,args):
                 # GFLOPs
 
                 break
-        break
 
-        mean_acc = correct / total * 100.
-        acc_list.append(mean_acc)
-        res_list.append(res)
         print(
             f"{args.method}   Resolution: {res}, FLOPs:{flops}")
         # print(
         #     f"Resolution: {res}, Accuracy: {mean_acc}")
+        break
 
     return res_list, acc_list, flops_list
 
