@@ -110,4 +110,4 @@ if __name__ == "__main__":
                                          # gradient_clip_val=1.0,
                                          check_val_every_n_epoch=args.eval_every)
 
-    trainer.fit(model, train_dataloader=train_dataloader, val_dataloaders=val_dataloader)
+    trainer.fit(model, train_dataloader, val_dataloader)
