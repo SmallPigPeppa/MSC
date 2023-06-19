@@ -1,4 +1,5 @@
 export https_proxy=http://10.7.4.2:3128
+export CUDA_VISIBLE_DEVICES=2,3
 /root/miniconda3/envs/solo-learn/bin/python resnet50.py \
   --num_gpus 2 \
   --weight_decay 2e-5 \
