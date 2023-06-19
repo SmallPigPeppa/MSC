@@ -12,7 +12,7 @@ import pytorch_lightning as pl
 from imagenet_dali import ClassificationDALIDataModule
 # from torchvision.models import vgg16,densenet121,inception_v3,mobilenetv2
 from torchvision.models import resnet50,resnext50_32x4d,googlenet,inception_v3,alexnet
-PRETRAINED=False
+PRETRAINED=True
 
 
 
