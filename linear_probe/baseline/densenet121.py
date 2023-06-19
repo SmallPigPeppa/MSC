@@ -91,7 +91,7 @@ if __name__ == "__main__":
     pl.seed_everything(19)
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
     checkpoint_callback = ModelCheckpoint(dirpath=args.checkpoint_dir, save_last=True)
-    wandb_logger = WandbLogger(name=f"{args.run_name}", project=args.project, entity=args.entity, offline=args.offline)
+    wandb_logger = WandbLogger(name=f"{args.run_name}-{args.dataset}", project=args.project, entity=args.entity, offline=args.offline)
     model = MSC.load_from_checkpoint(args.checkpoint_path, args=args)
 
     trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
@@ -101,6 +101,7 @@ if __name__ == "__main__":
 
     if args.dataset == 'cifar10':
         dataset_train, dataset_test = get_cifar10(data_path=args.dataset_path)
+        args.num_classes = 10
 
     train_dataloader = DataLoader(dataset_train, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
     val_dataloader = DataLoader(dataset_test, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
