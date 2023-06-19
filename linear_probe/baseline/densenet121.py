@@ -11,7 +11,7 @@ from args import parse_args
 import pytorch_lightning as pl
 from torchvision.models import vgg16, densenet121, inception_v3, mobilenetv2
 from torch.utils.data import DataLoader
-from ..transfer_dataset import *
+from transfer_dataset import *
 
 PRETRAINED = False
 
