@@ -21,8 +21,8 @@ class MSC(LightningModule):
         self.args = args
         # self.model = resnet50(pretrained=PRETRAINED)
         # self.model = densenet121(pretrained=PRETRAINED)
-        self.model = mobilenet_v2(pretrained=PRETRAINED)
-        # self.model = vgg16_bn(pretrained=PRETRAINED)
+        # self.model = mobilenet_v2(pretrained=PRETRAINED)
+        self.model = vgg16_bn(pretrained=PRETRAINED)
         self.ce_loss = nn.CrossEntropyLoss()
         self.mse_loss = nn.MSELoss()
         self.metrics_acc = torchmetrics.Accuracy()
