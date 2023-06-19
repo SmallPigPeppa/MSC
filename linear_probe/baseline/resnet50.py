@@ -9,8 +9,9 @@ from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 from args import parse_args
 import pytorch_lightning as pl
-from imagenet_dali import ClassificationDALIDataModule
 from torchvision.models import vgg16, densenet121, inception_v3, mobilenetv2,resnet50
+from torch.utils.data import DataLoader
+from transfer_dataset import *
 
 PRETRAINED = False
 
@@ -20,14 +21,17 @@ class MSC(LightningModule):
         super().__init__()
         self.args = args
         self.model = resnet50(pretrained=PRETRAINED)
-        self.num_features = self.model.fc.weight.shape[1]
-        self.model.fc = nn.Identity()
-        self.classifier = nn.Linear(self.num_features, args.num_classes)
         self.ce_loss = nn.CrossEntropyLoss()
         self.mse_loss = nn.MSELoss()
         self.metrics_acc = torchmetrics.Accuracy()
 
+    def initial_classifier(self):
+        self.num_features = self.model.classifier.weight.shape[1]
+        self.model.classifier = nn.Identity()
+        self.classifier = nn.Linear(self.num_features, args.num_classes)
+
     def forward(self, x):
+        x = F.interpolate(x, size=224, mode='bilinear')
         with torch.no_grad():
             z = self.model(x)
         y = self.classifier(z)
@@ -89,41 +93,21 @@ if __name__ == "__main__":
     pl.seed_everything(19)
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
     checkpoint_callback = ModelCheckpoint(dirpath=args.checkpoint_dir, save_last=True)
-    wandb_logger = WandbLogger(name=f"{args.run_name}", project=args.project, entity=args.entity, offline=args.offline)
-    model = MSC(args)
+    wandb_logger = WandbLogger(name=f"{args.run_name}-{args.dataset}", project=args.project, entity=args.entity,
+                               offline=args.offline)
 
-    if args.resume_from_checkpoint is not None:
-        trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
-                                             callbacks=[checkpoint_callback, lr_monitor],
-                                             resume_from_checkpoint=args.resume_from_checkpoint, precision=16,
-                                             # gradient_clip_val=1.0,
-                                             check_val_every_n_epoch=args.eval_every)
-    else:
-        trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
-                                             callbacks=[checkpoint_callback, lr_monitor], precision=16,
-                                             # gradient_clip_val=1.0,
-                                             check_val_every_n_epoch=args.eval_every)
+    if args.dataset == 'cifar10':
+        dataset_train, dataset_test = get_cifar10(data_path=args.dataset_path)
+        args.num_classes = 10
 
-    try:
-        from pytorch_lightning.loops import FitLoop
+    train_dataloader = DataLoader(dataset_train, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
+    val_dataloader = DataLoader(dataset_test, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
 
+    model = MSC.load_from_checkpoint(args.checkpoint_path, args=args)
+    model.initial_classifier()
+    trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
+                                         callbacks=[checkpoint_callback, lr_monitor], precision=16,
+                                         # gradient_clip_val=1.0,
+                                         check_val_every_n_epoch=args.eval_every)
 
-        class WorkaroundFitLoop(FitLoop):
-            @property
-            def prefetch_batches(self) -> int:
-                return 1
-
-
-        trainer.fit_loop = WorkaroundFitLoop(
-            trainer.fit_loop.min_epochs, trainer.fit_loop.max_epochs
-        )
-    except:
-        pass
-
-    dali_datamodule = ClassificationDALIDataModule(
-        train_data_path=os.path.join(args.dataset_path, 'train'),
-        val_data_path=os.path.join(args.dataset_path, 'val'),
-        num_workers=args.num_workers,
-        batch_size=args.batch_size)
-
-    trainer.fit(model, datamodule=dali_datamodule)
+    trainer.fit(model, train_dataloader, val_dataloader)
