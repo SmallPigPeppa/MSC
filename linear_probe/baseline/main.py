@@ -9,7 +9,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 from args import parse_args
 import pytorch_lightning as pl
-from torchvision.models import vgg16, densenet121, inception_v3, mobilenetv2
+from torchvision.models import resnet50, densenet121, vgg16_bn, mobilenet_v2
 from torch.utils.data import DataLoader
 from transfer_dataset import *
 
@@ -20,15 +20,45 @@ class MSC(LightningModule):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        self.model = densenet121(pretrained=PRETRAINED)
+        if args.model == 'resnet50':
+            self.model = resnet50(pretrained=PRETRAINED)
+        elif args.model == 'densenet121':
+            self.model = densenet121(pretrained=PRETRAINED)
+        elif args.model == 'vgg16':
+            self.model = vgg16_bn(pretrained=PRETRAINED)
+        elif args.model == 'mobilenetv2':
+            self.model = mobilenet_v2(pretrained=PRETRAINED)
         self.ce_loss = nn.CrossEntropyLoss()
         self.mse_loss = nn.MSELoss()
         self.metrics_acc = torchmetrics.Accuracy()
 
     def initial_classifier(self):
-        self.num_features = self.model.classifier.weight.shape[1]
-        self.model.classifier = nn.Identity()
-        self.classifier = nn.Linear(self.num_features, args.num_classes)
+        if self.args.model == 'resnet50':
+            self.num_features = self.model.fc.weight.shape[1]
+            self.model.fc = nn.Identity()
+            self.classifier = nn.Linear(self.num_features, args.num_classes)
+        elif self.args.model == 'densenet121':
+            self.num_features = self.model.classifier.weight.shape[1]
+            self.model.classifier = nn.Identity()
+            self.classifier = nn.Linear(self.num_features, args.num_classes)
+        elif self.args.model == 'vgg16':
+            self.model.classifier = nn.Identity()
+            dropout = 0.5
+            num_classes = args.num_classes
+            # self.classifier = nn.Linear(self.num_features, args.num_classes)
+            self.classifier = nn.Sequential(
+                nn.Linear(512 * 7 * 7, 4096),
+                nn.ReLU(True),
+                nn.Dropout(p=dropout),
+                nn.Linear(4096, 4096),
+                nn.ReLU(True),
+                nn.Dropout(p=dropout),
+                nn.Linear(4096, num_classes),
+            )
+        elif self.args.model == 'mobilenetv2':
+            self.num_features = self.model.classifier.weight.shape[1]
+            self.model.classifier = nn.Identity()
+            self.classifier = nn.Linear(self.num_features, args.num_classes)
 
     def forward(self, x):
         x = F.interpolate(x, size=224, mode='bilinear')
@@ -93,10 +123,16 @@ if __name__ == "__main__":
     pl.seed_everything(19)
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
     checkpoint_callback = ModelCheckpoint(dirpath=args.checkpoint_dir, save_last=True)
-    wandb_logger = WandbLogger(name=f"{args.run_name}-{args.dataset}", project=args.project, entity=args.entity,
+    wandb_logger = WandbLogger(name=f"{args.run_name}-{args.model}-{args.dataset}", project=args.project, entity=args.entity,
                                offline=args.offline)
 
     if args.dataset == 'cifar10':
+        dataset_train, dataset_test = get_cifar10(data_path=args.dataset_path)
+        args.num_classes = 10
+    if args.dataset == 'cifar100':
+        dataset_train, dataset_test = get_cifar10(data_path=args.dataset_path)
+        args.num_classes = 100
+    if args.dataset == 'stl10':
         dataset_train, dataset_test = get_cifar10(data_path=args.dataset_path)
         args.num_classes = 10
 

@@ -22,6 +22,9 @@ def parse_args():
     parser.add_argument("--checkpoint_path", type=str,
                         default='checkpoints/resnet50-baseline-s-clip-multi/epoch=89-step=112680.ckpt',
                         help="Path to the trained model checkpoint")
+    parser.add_argument("--model", type=str,
+                        default='resnet50',
+                        help="Path to the trained model checkpoint")
 
     args = parser.parse_args()
     return args

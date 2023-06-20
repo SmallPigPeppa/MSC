@@ -99,6 +99,12 @@ if __name__ == "__main__":
     if args.dataset == 'cifar10':
         dataset_train, dataset_test = get_cifar10(data_path=args.dataset_path)
         args.num_classes = 10
+    if args.dataset == 'cifar100':
+        dataset_train, dataset_test = get_cifar10(data_path=args.dataset_path)
+        args.num_classes = 100
+    if args.dataset == 'stl10':
+        dataset_train, dataset_test = get_cifar10(data_path=args.dataset_path)
+        args.num_classes = 10
 
     train_dataloader = DataLoader(dataset_train, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
     val_dataloader = DataLoader(dataset_test, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)

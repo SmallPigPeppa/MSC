@@ -24,7 +24,7 @@ for dataset in "${datasets[@]}"; do
     # 迭代不同的模型
     for model in "${!models[@]}"; do
         checkpoint=${models[$model]}
-        script="${model}.py"
+        script="main.py"
         gpu=${gpus[$model]}
         # 运行脚本
         CUDA_VISIBLE_DEVICES=$gpu /root/miniconda3/envs/solo-learn/bin/python $script \
@@ -35,7 +35,7 @@ for dataset in "${datasets[@]}"; do
             --batch_size 32 \
             --dataset_path /mnt/mmtech01/usr/liuwenzhuo/torch_ds/ \
             --checkpoint_path $checkpoint \
-            --run_name $model \
+            --run_name linear \
             --max_epochs 90 \
             --learning_rate 0.1 \
             --dataset $dataset &
