@@ -6,7 +6,8 @@ export PYTHONPATH=/mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali
 # 设置要运行的数据集
 #datasets=("cifar10" "cifar100" "stl10" "caltech" "fashion" "flowers")
 #datasets=( "stl10" "caltech" "fashion" "flowers")
-datasets=("aircraft")
+#datasets=("aircraft" "pets")
+datasets=("pets")
 
 # 设置你要运行的模型及其对应的脚本和检查点路径
 declare -A models
