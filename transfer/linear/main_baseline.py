@@ -151,6 +151,18 @@ if __name__ == "__main__":
     if args.dataset == 'flowers':
         dataset_train, dataset_test = get_flowers(data_path=args.dataset_path)
         args.num_classes = 102
+    if args.dataset == 'pets':
+        dataset_train, dataset_test = get_pets(data_path=args.dataset_path)
+        args.num_classes = 37
+    if args.dataset == 'cars':
+        dataset_train, dataset_test = get_cars(data_path=args.dataset_path)
+        args.num_classes = 196
+    if args.dataset == 'aircraft':
+        dataset_train, dataset_test = get_aircraft(data_path=args.dataset_path)
+        args.num_classes = 102
+    if args.dataset == 'rafdb':
+        dataset_train, dataset_test = get_rafdb(data_path=args.dataset_path)
+        args.num_classes = 7
 
     train_dataloader = DataLoader(dataset_train, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
     val_dataloader = DataLoader(dataset_test, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
