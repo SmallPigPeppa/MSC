@@ -130,7 +130,7 @@ if __name__ == "__main__":
         dataset_train, dataset_test = get_cifar10(data_path=args.dataset_path)
         args.num_classes = 10
     if args.dataset == 'cifar100':
-        dataset_train, dataset_test = get_cifar10(data_path=args.dataset_path)
+        dataset_train, dataset_test = get_cifar100(data_path=args.dataset_path)
         args.num_classes = 100
     if args.dataset == 'stl10':
         dataset_train, dataset_test = get_cifar10(data_path=args.dataset_path)
