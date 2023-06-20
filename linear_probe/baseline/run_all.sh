@@ -38,6 +38,7 @@ for dataset in "${datasets[@]}"; do
             --run_name linear \
             --max_epochs 90 \
             --learning_rate 0.1 \
+            --model $model \
             --dataset $dataset &
     done
     wait
