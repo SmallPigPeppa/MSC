@@ -34,18 +34,19 @@ class MSC(LightningModule):
 
     def initial_classifier(self):
         if self.args.model == 'resnet50':
-            self.num_features = self.model.fc.weight.shape[1]
+            num_features = self.model.fc.weight.shape[1]
+            num_classes = args.num_classes
             self.model.fc = nn.Identity()
-            self.classifier = nn.Linear(self.num_features, args.num_classes)
+            self.classifier = nn.Linear(num_features, num_classes)
         elif self.args.model == 'densenet121':
-            self.num_features = self.model.classifier.weight.shape[1]
+            num_features = self.model.classifier.weight.shape[1]
+            num_classes = args.num_classes
             self.model.classifier = nn.Identity()
-            self.classifier = nn.Linear(self.num_features, args.num_classes)
+            self.classifier = nn.Linear(num_features, num_classes)
         elif self.args.model == 'vgg16':
-            self.model.classifier = nn.Identity()
             dropout = 0.5
             num_classes = args.num_classes
-            # self.classifier = nn.Linear(self.num_features, args.num_classes)
+            self.model.classifier = nn.Identity()
             self.classifier = nn.Sequential(
                 nn.Linear(512 * 7 * 7, 4096),
                 nn.ReLU(True),
@@ -56,9 +57,14 @@ class MSC(LightningModule):
                 nn.Linear(4096, num_classes),
             )
         elif self.args.model == 'mobilenetv2':
-            self.num_features = self.model.classifier.weight.shape[1]
+            dropout = 0.2
+            num_classes = args.num_classes
+            num_features = self.model.last_channel
             self.model.classifier = nn.Identity()
-            self.classifier = nn.Linear(self.num_features, args.num_classes)
+            self.classifier = nn.Sequential(
+                nn.Dropout(p=dropout),
+                nn.Linear(num_features, num_classes),
+            )
 
     def forward(self, x):
         x = F.interpolate(x, size=224, mode='bilinear')
@@ -123,7 +129,8 @@ if __name__ == "__main__":
     pl.seed_everything(19)
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
     checkpoint_callback = ModelCheckpoint(dirpath=args.checkpoint_dir, save_last=True)
-    wandb_logger = WandbLogger(name=f"{args.run_name}-{args.model}-{args.dataset}", project=args.project, entity=args.entity,
+    wandb_logger = WandbLogger(name=f"{args.run_name}-{args.model}-{args.dataset}", project=args.project,
+                               entity=args.entity,
                                offline=args.offline)
 
     if args.dataset == 'cifar10':
