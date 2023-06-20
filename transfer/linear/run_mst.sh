@@ -10,8 +10,8 @@ datasets=("cifar10" "cifar100" "stl10")
 declare -A models
 models["resnet50"]="/mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/mstrain/checkpoints/resnet50-mstrain/last.ckpt"
 models["densenet121"]="/mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/mstrain/checkpoints/densenet121-mstrain/last.ckpt"
-models["vgg16"]="/mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline/mstrain/vgg16-bn-mstrain/last.ckpt"
-models["mobilenetv2"]="/mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline/mstrain/mobilenetv2-mstrain/last.ckpt"
+models["vgg16"]="/mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/mstrain/vgg16-bn-mstrain/last.ckpt"
+models["mobilenetv2"]="/mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/mstrain/mobilenetv2-mstrain/last.ckpt"
 
 # 设置每个模型对应的GPU卡号
 declare -A gpus
