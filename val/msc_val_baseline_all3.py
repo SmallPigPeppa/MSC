@@ -12,9 +12,9 @@ from torchprofile import profile_macs
 from pytorch_lightning.loggers import WandbLogger
 
 if __name__ == "__main__":
-    from torchvision.models import inception_v3
+    from torchvision.models import inception_v3,vgg16_bn, mobilenet_v2
 
-    model = inception_v3(pretrained=True)
+    model = mobilenet_v2(pretrained=True)
     model.eval()
 
     from torchvision.models import alexnet
