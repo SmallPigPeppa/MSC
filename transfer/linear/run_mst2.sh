@@ -6,7 +6,7 @@ export PYTHONPATH=/mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali
 # 设置要运行的数据集
 #datasets=("cifar10" "cifar100" "stl10" "caltech" "fashion" "flowers")
 #datasets=( "stl10" "caltech" "fashion" "flowers")
-datasets=( "stl10")
+datasets=( "caltech")
 
 # 设置你要运行的模型及其对应的脚本和检查点路径
 declare -A models
@@ -23,7 +23,7 @@ for dataset in "${datasets[@]}"; do
     # 迭代不同的模型
     for model in "${!models[@]}"; do
         checkpoint=${models[$model]}
-        script="main_mst.py"
+        script="main_mst2.py"
         gpu=${gpus[$model]}
         # 运行脚本
         CUDA_VISIBLE_DEVICES=$gpu /root/miniconda3/envs/solo-learn/bin/python $script \
