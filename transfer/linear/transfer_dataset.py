@@ -247,23 +247,23 @@ def get_aircraft(data_path):
             transforms.RandomResizedCrop(size=64, scale=(0.08, 1.0)),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
-            # transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
+            transforms.Normalize((0.4889, 0.5150, 0.5339), (0.1853, 0.1827, 0.2024)),
         ]
     )
     transform_test = transforms.Compose(
         [
             transforms.Resize((64, 64)),
             transforms.ToTensor(),
-            # transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
+            transforms.Normalize((0.4889, 0.5150, 0.5339), (0.1853, 0.1827, 0.2024)),
         ]
     )
     dataset_train = datasets.FGVCAircraft(root=data_path, split='train', download=True, transform=transform_train)
     dataset_test = datasets.FGVCAircraft(root=data_path, split='test', download=True, transform=transform_test)
-    mean_train, std_train = get_statistics(dataset_train)
-    mean_test, std_test = get_statistics(dataset_test)
-
-    print(f'Train dataset: mean={mean_train}, std={std_train}')
-    print(f'Test dataset: mean={mean_test}, std={std_test}')
+    # mean_train, std_train = get_statistics(dataset_train)
+    # mean_test, std_test = get_statistics(dataset_test)
+    #
+    # print(f'Train dataset: mean={mean_train}, std={std_train}')
+    # print(f'Test dataset: mean={mean_test}, std={std_test}')
     return dataset_train, dataset_test
 
 
