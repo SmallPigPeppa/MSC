@@ -148,11 +148,11 @@ if __name__ == "__main__":
     train_dataloader = DataLoader(dataset_train, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
     val_dataloader = DataLoader(dataset_test, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
 
-    model = MSC.load_from_checkpoint(args.checkpoint_path, args=args)
-    model.initial_classifier()
-    trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
-                                         callbacks=[checkpoint_callback, lr_monitor], precision=16,
-                                         # gradient_clip_val=1.0,
-                                         check_val_every_n_epoch=args.eval_every)
-
-    trainer.fit(model, train_dataloader, val_dataloader)
+    # model = MSC.load_from_checkpoint(args.checkpoint_path, args=args)
+    # model.initial_classifier()
+    # trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
+    #                                      callbacks=[checkpoint_callback, lr_monitor], precision=16,
+    #                                      # gradient_clip_val=1.0,
+    #                                      check_val_every_n_epoch=args.eval_every)
+    #
+    # trainer.fit(model, train_dataloader, val_dataloader)
