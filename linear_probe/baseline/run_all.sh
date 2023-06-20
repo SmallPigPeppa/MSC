@@ -9,14 +9,14 @@ datasets=("cifar100" "stl10")
 declare -A models
 models["resnet50"]="/mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline/checkpoints/resnet50-baseline/last.ckpt"
 models["densenet121"]="/mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline/checkpoints/densenet121-baseline/last.ckpt"
-models["vgg16-bn"]="/mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline/checkpoints/vgg16-bn-baseline/last.ckpt"
+models["vgg16"]="/mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline/checkpoints/vgg16-bn-baseline/last.ckpt"
 models["mobilenetv2"]="/mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/baseline/checkpoints/mobilenetv2-baseline/last.ckpt"
 
 # 设置每个模型对应的GPU卡号
 declare -A gpus
 gpus["resnet50"]="0,1"
 gpus["densenet121"]="2,3"
-gpus["vgg16-bn"]="4,5"
+gpus["vgg16"]="4,5"
 gpus["mobilenetv2"]="6,7"
 
 # 迭代不同的数据集
