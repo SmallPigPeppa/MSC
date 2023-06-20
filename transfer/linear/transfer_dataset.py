@@ -1,4 +1,42 @@
 from torchvision import datasets, transforms
+import numpy as np
+from torch.utils.data import Subset
+import torch
+
+
+def split_dataset(dataset, num_test=30):
+    # 获取所有类别的标签
+    targets = np.array(dataset.y)
+    classes, class_counts = np.unique(targets, return_counts=True)
+
+    train_indices, test_indices = [], []
+
+    for c in classes:
+        indices = np.where(targets == c)[0]
+        np.random.shuffle(indices)  # 随机打乱
+        test_indices.extend(indices[:num_test])
+        train_indices.extend(indices[num_test:])
+
+    dataset_train = Subset(dataset, train_indices)
+    dataset_test = Subset(dataset, test_indices)
+
+    return dataset_train, dataset_test
+
+
+def get_statistics(dataset):
+    loader = torch.utils.data.DataLoader(dataset, batch_size=64, shuffle=True)
+    mean = 0.
+    std = 0.
+    for images, _ in loader:
+        batch_samples = images.size(0)  # batch size (the last batch can have smaller size!)
+        images = images.view(batch_samples, images.size(1), -1)
+        mean += images.mean(2).sum(0)
+        std += images.std(2).sum(0)
+
+    mean /= len(loader.dataset)
+    std /= len(loader.dataset)
+
+    return mean, std
 
 
 def get_cifar10(data_path):
@@ -14,9 +52,9 @@ def get_cifar10(data_path):
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])
 
-    cifar10_train = datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
-    cifar10_test = datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
-    return cifar10_train, cifar10_test
+    dataset_train = datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
+    dataset_test = datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
+    return dataset_train, dataset_test
 
 
 def get_cifar100(data_path):
@@ -35,9 +73,9 @@ def get_cifar100(data_path):
             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.247, 0.243, 0.261)),
         ]
     )
-    cifar100_train = datasets.CIFAR100(root=data_path, train=True, download=True, transform=transform_train)
-    cifar100_test = datasets.CIFAR100(root=data_path, train=False, download=True, transform=transform_test)
-    return cifar100_train, cifar100_test
+    dataset_train = datasets.CIFAR100(root=data_path, train=True, download=True, transform=transform_train)
+    dataset_test = datasets.CIFAR100(root=data_path, train=False, download=True, transform=transform_test)
+    return dataset_train, dataset_test
 
 
 def get_stl10(data_path):
@@ -56,43 +94,109 @@ def get_stl10(data_path):
             transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
         ]
     )
-    stl10_train = datasets.STL10(root=data_path, split='train', download=True, transform=transform_train)
-    stl10_test = datasets.STL10(root=data_path, split='test', download=True, transform=transform_test)
-    return stl10_train, stl10_test
-
-
-def get_fashion_mnist(data_path):
-    transform = transforms.Compose([transforms.ToTensor(),
-                                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-                                    ])
-    fashion_mnist_train = datasets.FashionMNIST(data_path, download=True, train=True, transform=transform)
-    fashion_mnist_test = datasets.FashionMNIST(data_path, download=True, train=False, transform=transform)
-    return fashion_mnist_train, fashion_mnist_test
+    dataset_train = datasets.STL10(root=data_path, split='train', download=True, transform=transform_train)
+    dataset_test = datasets.STL10(root=data_path, split='test', download=True, transform=transform_test)
+    return dataset_train, dataset_test
 
 
 def get_caltech101(data_path):
     transform_train = transforms.Compose(
         [
-            transforms.RandomResizedCrop(size=96, scale=(0.08, 1.0)),
+            transforms.RandomResizedCrop(size=224, scale=(0.08, 1.0)),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
+            transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
         ]
     )
     transform_test = transforms.Compose(
         [
-            transforms.Resize((96, 96)),
+            transforms.Resize((256, 256)),
+            transforms.CenterCrop(size=224),
             transforms.ToTensor(),
             transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
         ]
     )
-    dataset_train = datasets.Caltech101(root=data_path, target_type='category', download=True,
-                                        transform=transform_train)
-    dataset_test = datasets.Caltech101(root=data_path, target_type='category', download=True,
-                                       transform=transform_train)
+    dataset = datasets.Caltech101(root=data_path, target_type='category', download=True, transform=None)  # 先不进行预处理
+    dataset_train, dataset_test = split_dataset(dataset)  # 划分训练集和测试集
+    dataset_train.dataset.transform = transform_train  # 对训练集进行预处理
+    dataset_test.dataset.transform = transform_test  # 对测试集进行预处理
+
     return dataset_train, dataset_test
-    # stl10_test = datasets.Caltech101(root=data_path, split='test', download=True, transform=transform_test)
-    # return stl10_train, stl10_test
+
+
+def to_3_channels(x):
+    return torch.stack([x] * 3)
+
+
+def get_fashion_mnist(data_path):
+    transform = transforms.Compose([transforms.ToTensor(), transforms.Lambda(to_3_channels),
+                                    transforms.Normalize((0.2860, 0.2860, 0.2860), (0.3205, 0.3205, 0.3205))])
+    dataset_train = datasets.FashionMNIST(data_path, download=True, train=True, transform=transform)
+    dataset_test = datasets.FashionMNIST(data_path, download=True, train=False, transform=transform)
+    # mean_train, std_train = get_statistics(dataset_train)
+    # mean_test, std_test = get_statistics(dataset_test)
+    #
+    # print(f'Train dataset: mean={mean_train}, std={std_train}')
+    # print(f'Test dataset: mean={mean_test}, std={std_test}')
+
+    return dataset_train, dataset_test
+
+
+def get_flowers(data_path):
+    transform_train = transforms.Compose(
+        [
+            transforms.RandomResizedCrop(size=224, scale=(0.08, 1.0)),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5123, 0.4131, 0.3406), (0.2523, 0.2079, 0.2196)),
+        ]
+    )
+    transform_test = transforms.Compose(
+        [
+            transforms.Resize((256, 256)),
+            transforms.CenterCrop(size=224),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5123, 0.4131, 0.3406), (0.2523, 0.2079, 0.2196)),
+        ]
+    )
+    dataset_train = datasets.Flowers102(root=data_path, split='train', download=True, transform=transform_train)
+    dataset_test = datasets.Flowers102(root=data_path, split='test', download=True, transform=transform_test)
+
+    # mean_train, std_train = get_statistics(dataset_train)
+    # mean_test, std_test = get_statistics(dataset_test)
+    #
+    # print(f'Train dataset: mean={mean_train}, std={std_train}')
+    # print(f'Test dataset: mean={mean_test}, std={std_test}')
+
+    return dataset_train, dataset_test
+
+def get_pets(data_path):
+    transform_train = transforms.Compose(
+        [
+            transforms.RandomResizedCrop(size=224, scale=(0.08, 1.0)),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            # transforms.Normalize((0.5123, 0.4131, 0.3406), (0.2523, 0.2079, 0.2196)),
+        ]
+    )
+    transform_test = transforms.Compose(
+        [
+            transforms.Resize((256, 256)),
+            transforms.CenterCrop(size=224),
+            transforms.ToTensor(),
+            # transforms.Normalize((0.5123, 0.4131, 0.3406), (0.2523, 0.2079, 0.2196)),
+        ]
+    )
+    dataset_train = datasets.OxfordIIITPet(root=data_path, split='trainval', download=True, target_types='category',
+                                           transform=transform_train)
+    dataset_test = datasets.OxfordIIITPet(root=data_path, split='test', download=True, target_types='category',
+                                          transform=transform_test)
+    mean_train, std_train = get_statistics(dataset_train)
+    mean_test, std_test = get_statistics(dataset_test)
+
+    print(f'Train dataset: mean={mean_train}, std={std_train}')
+    print(f'Test dataset: mean={mean_test}, std={std_test}')
+    return dataset_train, dataset_test
 
 
 def get_cars(data_path):
@@ -136,6 +240,7 @@ def get_aircraft(data_path):
     dataset_test = datasets.FGVCAircraft(root=data_path, split='test', download=True, transform=transform_test)
     return dataset_train, dataset_test
 
+
 def get_sun397(data_path):
     transform_train = transforms.Compose(
         [
@@ -155,6 +260,7 @@ def get_sun397(data_path):
     dataset_train = datasets.SUN397(root=data_path, download=True, transform=transform_train)
     dataset_test = datasets.SUN397(root=data_path, download=True, transform=transform_test)
     return dataset_train, dataset_test
+
 
 def get_pcam(data_path):
     transform_train = transforms.Compose(
@@ -176,6 +282,7 @@ def get_pcam(data_path):
     dataset_test = datasets.PCAM(root=data_path, split='train', download=True, transform=transform_train)
     return dataset_train, dataset_test
 
+
 def get_pcam(data_path):
     transform_train = transforms.Compose(
         [
@@ -195,6 +302,7 @@ def get_pcam(data_path):
     dataset_train = datasets.PCAM(root=data_path, split='train', download=True, transform=transform_train)
     dataset_test = datasets.PCAM(root=data_path, split='train', download=True, transform=transform_test)
     return dataset_train, dataset_test
+
 
 def get_dtd(data_path):
     transform_train = transforms.Compose(
@@ -216,52 +324,19 @@ def get_dtd(data_path):
     dataset_test = datasets.DTD(root=data_path, split='train', download=True, transform=transform_test)
     return dataset_train, dataset_test
 
-def get_pets(data_path):
-    transform_train = transforms.Compose(
-        [
-            transforms.RandomResizedCrop(size=96, scale=(0.08, 1.0)),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
-        ]
-    )
-    transform_test = transforms.Compose(
-        [
-            transforms.Resize((96, 96)),
-            transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
-        ]
-    )
-    dataset_train = datasets.OxfordIIITPet(root=data_path, split='trainval', download=True,target_types='category', transform=transform_train)
-    dataset_test = datasets.OxfordIIITPet(root=data_path, split='test', download=True, target_types='category', transform=transform_test)
-    return dataset_train, dataset_test
 
-def get_flowers(data_path):
-    transform_train = transforms.Compose(
-        [
-            transforms.RandomResizedCrop(size=96, scale=(0.08, 1.0)),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
-        ]
-    )
-    transform_test = transforms.Compose(
-        [
-            transforms.Resize((96, 96)),
-            transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
-        ]
-    )
-    dataset_train = datasets.Flowers102(root=data_path, split='train', download=True, transform=transform_train)
-    dataset_test = datasets.Flowers102(root=data_path, split='test', download=True, transform=transform_test)
-    return dataset_train, dataset_test
+
+
 
 
 
 if __name__ == '__main__':
     # a, b = get_caltech101(data_path='/Users/lwz/torch_ds')
-    # a, b = get_cars(data_path='/Users/lwz/torch_ds')
-    a, b = get_aircraft(data_path='/Users/lwz/torch_ds')
+    # c, d = len(a), len(b)
+    a, b = get_pets(data_path='/Users/lwz/torch_ds')
+    c, d = len(a), len(b)
+    # # a, b = get_cars(data_path='/Users/lwz/torch_ds')
+    # a, b = get_aircraft(data_path='/Users/lwz/torch_ds')
     c = 0
 
 """
@@ -292,34 +367,34 @@ StanfordCars：这个数据集包含8144张训练图像和8041张测试图像，
 SUN397：这是一个场景识别的数据集，包含397个类别，每个类别有100张图像。图像的尺寸不一，但大多数都小于224x224。
 """
 
-
-def get_Caltech101():
-    pass
-
-
-def get_Caltech256():
-    pass
-
-
-def get_CelebA():
-    pass
-
-
-def get_EuroSAT():
-    pass
-
-
-def get_FGVCAircraft():
-    pass
-
-
-def get_PCAM():
-    pass
-
-
-def get_StanfordCars():
-    pass
-
-
-def get_SUN397():
-    pass
+#
+# def get_Caltech101():
+#     pass
+#
+#
+# def get_Caltech256():
+#     pass
+#
+#
+# def get_CelebA():
+#     pass
+#
+#
+# def get_EuroSAT():
+#     pass
+#
+#
+# def get_FGVCAircraft():
+#     pass
+#
+#
+# def get_PCAM():
+#     pass
+#
+#
+# def get_StanfordCars():
+#     pass
+#
+#
+# def get_SUN397():
+#     pass

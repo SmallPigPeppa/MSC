@@ -133,8 +133,17 @@ if __name__ == "__main__":
         dataset_train, dataset_test = get_cifar100(data_path=args.dataset_path)
         args.num_classes = 100
     if args.dataset == 'stl10':
-        dataset_train, dataset_test = get_cifar10(data_path=args.dataset_path)
+        dataset_train, dataset_test = get_stl10(data_path=args.dataset_path)
         args.num_classes = 10
+    if args.dataset == 'caltech':
+        dataset_train, dataset_test = get_caltech101(data_path=args.dataset_path)
+        args.num_classes = 101
+    if args.dataset == 'fashion':
+        dataset_train, dataset_test = get_fashion_mnist(data_path=args.dataset_path)
+        args.num_classes = 10
+    if args.dataset == 'flowers':
+        dataset_train, dataset_test = get_flowers(data_path=args.dataset_path)
+        args.num_classes = 102
 
     train_dataloader = DataLoader(dataset_train, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
     val_dataloader = DataLoader(dataset_test, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
