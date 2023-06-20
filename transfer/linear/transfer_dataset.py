@@ -192,7 +192,7 @@ def get_pets(data_path):
             transforms.RandomResizedCrop(size=224, scale=(0.08, 1.0)),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
-            transforms.Normalize((0.4832, 0.4449, 0.3951), (0.2160, 0.2131, 0.2136)),
+            transforms.Normalize((0.4808, 0.4424, 0.3933), (0.2161, 0.2131, 0.2138)),
         ]
     )
     transform_test = transforms.Compose(
@@ -200,7 +200,7 @@ def get_pets(data_path):
             transforms.Resize((256, 256)),
             transforms.CenterCrop(size=224),
             transforms.ToTensor(),
-            transforms.Normalize((0.4832, 0.4449, 0.3951), (0.2160, 0.2131, 0.2136)),
+            transforms.Normalize((0.4808, 0.4424, 0.3933), (0.2161, 0.2131, 0.2138)),
         ]
     )
     dataset_train = datasets.OxfordIIITPet(root=data_path, split='trainval', download=True, target_types='category',
@@ -214,6 +214,82 @@ def get_pets(data_path):
     # print(f'Test dataset: mean={mean_test}, std={std_test}')
     return dataset_train, dataset_test
 
+def get_cars(data_path):
+    transform_train = transforms.Compose(
+        [
+            transforms.RandomResizedCrop(size=224, scale=(0.08, 1.0)),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4502, 0.4344, 0.4351), (0.2571, 0.2545, 0.2584)),
+        ]
+    )
+    transform_test = transforms.Compose(
+        [
+            transforms.Resize((256, 256)),
+            transforms.CenterCrop(size=224),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4502, 0.4344, 0.4351), (0.2571, 0.2545, 0.2584)),
+        ]
+    )
+    dataset_train = datasets.StanfordCars(root=data_path, split='train', download=False, transform=transform_train)
+    dataset_test = datasets.StanfordCars(root=data_path, split='test', download=False, transform=transform_test)
+    # mean_train, std_train = get_statistics(dataset_train)
+    # mean_test, std_test = get_statistics(dataset_test)
+
+    # print(f'Train dataset: mean={mean_train}, std={std_train}')
+    # print(f'Test dataset: mean={mean_test}, std={std_test}')
+    return dataset_train, dataset_test
+
+
+def get_aircraft(data_path):
+    transform_train = transforms.Compose(
+        [
+            transforms.RandomResizedCrop(size=64, scale=(0.08, 1.0)),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            # transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
+        ]
+    )
+    transform_test = transforms.Compose(
+        [
+            transforms.Resize((64, 64)),
+            transforms.ToTensor(),
+            # transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
+        ]
+    )
+    dataset_train = datasets.FGVCAircraft(root=data_path, split='train', download=True, transform=transform_train)
+    dataset_test = datasets.FGVCAircraft(root=data_path, split='test', download=True, transform=transform_test)
+    mean_train, std_train = get_statistics(dataset_train)
+    mean_test, std_test = get_statistics(dataset_test)
+
+    print(f'Train dataset: mean={mean_train}, std={std_train}')
+    print(f'Test dataset: mean={mean_test}, std={std_test}')
+    return dataset_train, dataset_test
+
+
+def get_rafdb(data_path):
+    # train_mean = [0.57520399, 0.44951904, 0.40121641]
+    # train_std = [0.20838688, 0.19108407, 0.18262798]
+    # test_mean = [0.57697346, 0.44934572, 0.40011644]
+    # test_std = [0.2081054, 0.18985509, 0.18132337]
+
+    train_transform = transforms.Compose([
+        transforms.RandomResizedCrop(size=32, scale=(0.08, 1.0)),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize((0.57520399, 0.44951904, 0.40121641), (0.20838688, 0.19108407, 0.18262798))
+    ])
+
+    test_transform = transforms.Compose([
+        transforms.Resize((32, 32)),
+        transforms.ToTensor(),
+        transforms.Normalize((0.57520399, 0.44951904, 0.40121641), (0.20838688, 0.19108407, 0.18262798))
+    ])
+
+    dataset_train = datasets.ImageFolder(os.path.join(data_path, 'RAF-DB', 'train'), transform=train_transform)
+    dataset_test = datasets.ImageFolder(os.path.join(data_path, 'RAF-DB', 'test'), transform=test_transform)
+
+    return dataset_train, dataset_test
 
 def get_pcam(data_path):
     transform_train = transforms.Compose(
@@ -290,77 +366,13 @@ def get_sun397(data_path):
     return dataset_train, dataset_test
 
 
-def get_cars(data_path):
-    transform_train = transforms.Compose(
-        [
-            transforms.RandomResizedCrop(size=96, scale=(0.08, 1.0)),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
-        ]
-    )
-    transform_test = transforms.Compose(
-        [
-            transforms.Resize((96, 96)),
-            transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
-        ]
-    )
-    dataset_train = datasets.StanfordCars(root=data_path, split='train', download=True, transform=transform_train)
-    dataset_test = datasets.StanfordCars(root=data_path, split='test', download=True, transform=transform_test)
-    return dataset_train, dataset_test
 
-
-def get_aircraft(data_path):
-    transform_train = transforms.Compose(
-        [
-            transforms.RandomResizedCrop(size=96, scale=(0.08, 1.0)),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
-        ]
-    )
-    transform_test = transforms.Compose(
-        [
-            transforms.Resize((96, 96)),
-            transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
-        ]
-    )
-    dataset_train = datasets.FGVCAircraft(root=data_path, split='train', download=True, transform=transform_train)
-    dataset_test = datasets.FGVCAircraft(root=data_path, split='test', download=True, transform=transform_test)
-    return dataset_train, dataset_test
-
-
-def get_rafdb(data_path):
-    # train_mean = [0.57520399, 0.44951904, 0.40121641]
-    # train_std = [0.20838688, 0.19108407, 0.18262798]
-    # test_mean = [0.57697346, 0.44934572, 0.40011644]
-    # test_std = [0.2081054, 0.18985509, 0.18132337]
-
-    train_transform = transforms.Compose([
-        transforms.RandomResizedCrop(size=32, scale=(0.08, 1.0)),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize((0.57520399, 0.44951904, 0.40121641), (0.20838688, 0.19108407, 0.18262798))
-    ])
-
-    test_transform = transforms.Compose([
-        transforms.Resize((32, 32)),
-        transforms.ToTensor(),
-        transforms.Normalize((0.57520399, 0.44951904, 0.40121641), (0.20838688, 0.19108407, 0.18262798))
-    ])
-
-    dataset_train = datasets.ImageFolder(os.path.join(data_path, 'RAF-DB', 'train'), transform=train_transform)
-    dataset_test = datasets.ImageFolder(os.path.join(data_path, 'RAF-DB', 'test'), transform=test_transform)
-
-    return dataset_train, dataset_test
 
 
 if __name__ == '__main__':
     # a, b = get_caltech101(data_path='/Users/lwz/torch_ds')
     # c, d = len(a), len(b)
-    a, b = get_pcam(data_path='/Users/lwz/torch_ds')
+    a, b = get_aircraft(data_path='/Users/lwz/torch_ds')
     c, d = len(a), len(b)
     # # a, b = get_cars(data_path='/Users/lwz/torch_ds')
     # a, b = get_aircraft(data_path='/Users/lwz/torch_ds')
