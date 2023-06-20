@@ -169,7 +169,7 @@ if __name__ == "__main__":
 
     model = MSC.load_from_checkpoint(args.checkpoint_path, args=args)
     model.initial_classifier()
-    if args.method=='vgg16':
+    if args.model == 'vgg16':
         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
                                              callbacks=[checkpoint_callback, lr_monitor], precision=16,
                                              gradient_clip_val=1.0,
