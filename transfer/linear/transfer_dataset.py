@@ -333,7 +333,7 @@ def get_dtd(data_path):
 if __name__ == '__main__':
     # a, b = get_caltech101(data_path='/Users/lwz/torch_ds')
     # c, d = len(a), len(b)
-    a, b = get_pets(data_path='/Users/lwz/torch_ds')
+    a, b = get_stl10(data_path='/Users/lwz/torch_ds')
     c, d = len(a), len(b)
     # # a, b = get_cars(data_path='/Users/lwz/torch_ds')
     # a, b = get_aircraft(data_path='/Users/lwz/torch_ds')
