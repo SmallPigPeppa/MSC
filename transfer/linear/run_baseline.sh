@@ -3,10 +3,10 @@
 export https_proxy=http://10.7.4.2:3128
 
 # 设置要运行的数据集
-#datasets=("cifar10" "cifar100" "stl10" "caltech" "fashion" "flowers")
-#datasets=( "stl10" "caltech" "fashion" "flowers")
-#datasets=("caltech" "fashion")
-datasets=("pets" "cars" "rafdb")
+datasets=("cifar10" "cifar100" "stl10" "caltech" "fashion" "flowers" "pets" "cars" "rafdb" "aircraft")
+##datasets=( "stl10" "caltech" "fashion" "flowers")
+##datasets=("caltech" "fashion")
+#datasets=("pets" "cars" "rafdb")
 
 # 设置你要运行的模型及其对应的脚本和检查点路径
 declare -A models
@@ -33,7 +33,7 @@ for dataset in "${datasets[@]}"; do
     CUDA_VISIBLE_DEVICES=$gpu /root/miniconda3/envs/solo-learn/bin/python $script \
       --num_gpus 2 \
       --weight_decay 2e-5 \
-      --project msc-transfer-linear \
+      --project msc-transfer-linear-clip \
       --num_workers 8 \
       --batch_size 32 \
       --dataset_path /mnt/mmtech01/usr/liuwenzhuo/torch_ds/ \

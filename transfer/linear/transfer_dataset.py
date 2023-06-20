@@ -247,14 +247,14 @@ def get_aircraft(data_path):
             transforms.RandomResizedCrop(size=64, scale=(0.08, 1.0)),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
-            transforms.Normalize((0.4889, 0.5150, 0.5339), (0.1853, 0.1827, 0.2024)),
+            transforms.Normalize((0.4880, 0.5145, 0.5339), (0.1854, 0.1825, 0.2013)),
         ]
     )
     transform_test = transforms.Compose(
         [
             transforms.Resize((64, 64)),
             transforms.ToTensor(),
-            transforms.Normalize((0.4889, 0.5150, 0.5339), (0.1853, 0.1827, 0.2024)),
+            transforms.Normalize((0.4880, 0.5145, 0.5339), (0.1854, 0.1825, 0.2013)),
         ]
     )
     dataset_train = datasets.FGVCAircraft(root=data_path, split='train', download=True, transform=transform_train)
