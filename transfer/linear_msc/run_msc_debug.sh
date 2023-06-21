@@ -10,16 +10,16 @@ datasets=("cifar10")
 # 设置你要运行的模型及其对应的脚本和检查点路径
 declare -A models
 models["resnet50"]="/mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/checkpoints/resnet50-l2-last/last.ckpt"
-#models["densenet121"]="/mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/checkpoints/densenet121-l2-seprate-trans/last.ckpt"
-#models["vgg16"]="/mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/checkpoints/vgg16-l2-new/last.ckpt"
-#models["mobilenetv2"]="/mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/checkpoints/mobilenetv2-l3-wd2/last.ckpt"
+models["densenet121"]="/mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/checkpoints/densenet121-l2-seprate-trans/last.ckpt"
+models["vgg16"]="/mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/checkpoints/vgg16-l2-new/last.ckpt"
+models["mobilenetv2"]="/mnt/mmtech01/usr/liuwenzhuo/code/test-code/MSC-dali/checkpoints/mobilenetv2-l3-wd2/last.ckpt"
 
 # 设置每个模型对应的GPU卡号
 declare -A gpus
 gpus["resnet50"]="0,1"
-#gpus["densenet121"]="2,3"
-#gpus["vgg16"]="4,5"
-#gpus["mobilenetv2"]="6,7"
+gpus["densenet121"]="2,3"
+gpus["vgg16"]="4,5"
+gpus["mobilenetv2"]="6,7"
 
 # 迭代不同的数据集
 for dataset in "${datasets[@]}"; do
