@@ -71,8 +71,8 @@ class MSC(LightningModule):
 
     def forward(self, x):
         x = F.interpolate(x, size=224, mode='bilinear')
-        with torch.no_grad():
-            z = self.model.unified_net(x)
+        # with torch.no_grad():
+        z = self.model.unified_net(x)
         y = self.classifier(z)
         return y
 
