@@ -55,38 +55,38 @@ class MSC(LightningModule):
             num_features = 512 * 7 * 7
             num_classes = args.num_classes
             self.model.unified_net.classifier = nn.Identity()
-            self.classifier = nn.Linear(num_features, num_classes)
-            # self.classifier = nn.Sequential(
-            #     nn.Linear(512 * 7 * 7, 4096),
-            #     nn.ReLU(True),
-            #     nn.Dropout(p=dropout),
-            #     nn.Linear(4096, 4096),
-            #     nn.ReLU(True),
-            #     nn.Dropout(p=dropout),
-            #     nn.Linear(4096, num_classes),
-            # )
+            # self.classifier = nn.Linear(num_features, num_classes)
+            self.classifier = nn.Sequential(
+                nn.Linear(512 * 7 * 7, 4096),
+                nn.ReLU(True),
+                nn.Dropout(p=dropout),
+                nn.Linear(4096, 4096),
+                nn.ReLU(True),
+                nn.Dropout(p=dropout),
+                nn.Linear(4096, num_classes),
+            )
         elif self.args.model == 'mobilenetv2':
             dropout = 0.2
             num_classes = args.num_classes
             num_features = self.model.unified_net.last_channel
             self.model.unified_net.classifier = nn.Identity()
-            self.classifier = nn.Linear(num_features, num_classes)
-            # self.classifier = nn.Sequential(
-            #     nn.Dropout(p=dropout),
-            #     nn.Linear(num_features, num_classes),
-            # )
+            # self.classifier = nn.Linear(num_features, num_classes)
+            self.classifier = nn.Sequential(
+                nn.Dropout(p=dropout),
+                nn.Linear(num_features, num_classes),
+            )
 
     def forward(self, x):
-        with torch.no_grad():
-            if args.imagesize == 224:
-                # print('############################# 224 #############################')
-                z = self.model.forward_224(x)
-            elif args.imagesize in [128, 96, 64]:
-                # print('############################# 128 #############################')
-                z = self.model.forward_128(x)
-            elif args.imagesize in [32, 28]:
-                # print('############################# 32 #############################')
-                z = self.model.forward_32(x)
+        # with torch.no_grad():
+        if args.imagesize == 224:
+            # print('############################# 224 #############################')
+            z = self.model.forward_224(x)
+        elif args.imagesize in [128, 96, 64]:
+            # print('############################# 128 #############################')
+            z = self.model.forward_128(x)
+        elif args.imagesize in [32, 28]:
+            # print('############################# 32 #############################')
+            z = self.model.forward_32(x)
         y = self.classifier(z)
         return y
 

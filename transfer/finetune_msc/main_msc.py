@@ -11,10 +11,14 @@ from args import parse_args
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 from transfer_dataset import *
-from mstrain.resnet50 import ResNet50_L2
-from mstrain.densenet121 import DenseNet121_L2
-from mstrain.vgg16_bn import VGG16_L2
-from mstrain.mobilenetv2 import MobileNetV2_L3
+# from mstrain.resnet50 import ResNet50_L2
+# from mstrain.densenet121 import DenseNet121_L2
+# from mstrain.vgg16_bn import VGG16_L2
+# from mstrain.mobilenetv2 import MobileNetV2_L3
+from resnet50_l2_last import ResNet50_L2
+from densenet121_l2_seprate_trans import DenseNet121_L2
+from vgg16_l3 import VGG16_L2
+from mobilenetv2_l3 import MobileNetV2_L3
 
 PRETRAINED = False
 
@@ -48,31 +52,41 @@ class MSC(LightningModule):
             self.classifier = nn.Linear(num_features, num_classes)
         elif self.args.model == 'vgg16':
             dropout = 0.5
+            num_features = 512 * 7 * 7
             num_classes = args.num_classes
             self.model.unified_net.classifier = nn.Identity()
-            self.classifier = nn.Sequential(
-                nn.Linear(512 * 7 * 7, 4096),
-                nn.ReLU(True),
-                nn.Dropout(p=dropout),
-                nn.Linear(4096, 4096),
-                nn.ReLU(True),
-                nn.Dropout(p=dropout),
-                nn.Linear(4096, num_classes),
-            )
+            self.classifier = nn.Linear(num_features, num_classes)
+            # self.classifier = nn.Sequential(
+            #     nn.Linear(512 * 7 * 7, 4096),
+            #     nn.ReLU(True),
+            #     nn.Dropout(p=dropout),
+            #     nn.Linear(4096, 4096),
+            #     nn.ReLU(True),
+            #     nn.Dropout(p=dropout),
+            #     nn.Linear(4096, num_classes),
+            # )
         elif self.args.model == 'mobilenetv2':
             dropout = 0.2
             num_classes = args.num_classes
             num_features = self.model.unified_net.last_channel
             self.model.unified_net.classifier = nn.Identity()
-            self.classifier = nn.Sequential(
-                nn.Dropout(p=dropout),
-                nn.Linear(num_features, num_classes),
-            )
+            self.classifier = nn.Linear(num_features, num_classes)
+            # self.classifier = nn.Sequential(
+            #     nn.Dropout(p=dropout),
+            #     nn.Linear(num_features, num_classes),
+            # )
 
     def forward(self, x):
-        x = F.interpolate(x, size=224, mode='bilinear')
         with torch.no_grad():
-            z = self.model.unified_net(x)
+            if args.imagesize == 224:
+                # print('############################# 224 #############################')
+                z = self.model.forward_224(x)
+            elif args.imagesize in [128, 96, 64]:
+                # print('############################# 128 #############################')
+                z = self.model.forward_128(x)
+            elif args.imagesize in [32, 28]:
+                # print('############################# 32 #############################')
+                z = self.model.forward_32(x)
         y = self.classifier(z)
         return y
 
@@ -169,24 +183,26 @@ if __name__ == "__main__":
     if args.dataset=='dtd':
         dataset_train, dataset_test = get_dtd(data_path=args.dataset_path)
         args.num_classes = 47
+        args.imagesize = 224
     if args.dataset=='sun397':
         dataset_train, dataset_test = get_sun397(data_path=args.dataset_path)
         args.num_classes = 397
+        args.imagesize = 224
 
     train_dataloader = DataLoader(dataset_train, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
     val_dataloader = DataLoader(dataset_test, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
 
     model = MSC.load_from_checkpoint(args.checkpoint_path, args=args)
     model.initial_classifier()
-    if args.model == 'vgg16':
-        trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
-                                             callbacks=[checkpoint_callback, lr_monitor], precision=16,
-                                             gradient_clip_val=1.0,
-                                             check_val_every_n_epoch=args.eval_every)
-    else:
-        trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
-                                             callbacks=[checkpoint_callback, lr_monitor], precision=16,
-                                             # gradient_clip_val=1.0,
-                                             check_val_every_n_epoch=args.eval_every)
+    # if args.model == 'vgg16':
+    trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
+                                         callbacks=[checkpoint_callback, lr_monitor], precision=16,
+                                         gradient_clip_val=1.0,
+                                         check_val_every_n_epoch=args.eval_every)
+    # else:
+    #     trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
+    #                                          callbacks=[checkpoint_callback, lr_monitor], precision=16,
+    #                                          # gradient_clip_val=1.0,
+    #                                      check_val_every_n_epoch=args.eval_every)
 
     trainer.fit(model, train_dataloader, val_dataloader)
