@@ -166,6 +166,12 @@ if __name__ == "__main__":
     if args.dataset == 'rafdb':
         dataset_train, dataset_test = get_rafdb(data_path=args.dataset_path)
         args.num_classes = 7
+    if args.dataset=='dtd':
+        dataset_train, dataset_test = get_dtd(data_path=args.dataset_path)
+        args.num_classes = 47
+    if args.dataset=='sun397':
+        dataset_train, dataset_test = get_sun397(data_path=args.dataset_path)
+        args.num_classes = 397
 
     train_dataloader = DataLoader(dataset_train, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
     val_dataloader = DataLoader(dataset_test, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
