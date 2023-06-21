@@ -11,10 +11,11 @@ from args import parse_args
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 from transfer_dataset import *
-from mstrain.resnet50 import ResNet50_L2
-from mstrain.densenet121 import DenseNet121_L2
-from mstrain.vgg16_bn import VGG16_L2
-from mstrain.mobilenetv2 import MobileNetV2_L3
+# from mstrain.resnet50 import ResNet50_L2
+# from mstrain.densenet121 import DenseNet121_L2
+# from mstrain.vgg16_bn import VGG16_L2
+# from mstrain.mobilenetv2 import MobileNetV2_L3
+from resnet50_l2_last import ResNet50_L2
 
 PRETRAINED = False
 
@@ -172,15 +173,15 @@ if __name__ == "__main__":
 
     model = MSC.load_from_checkpoint(args.checkpoint_path, args=args)
     model.initial_classifier()
-    if args.model == 'vgg16':
-        trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
-                                             callbacks=[checkpoint_callback, lr_monitor], precision=16,
-                                             gradient_clip_val=1.0,
-                                             check_val_every_n_epoch=args.eval_every)
-    else:
-        trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
-                                             callbacks=[checkpoint_callback, lr_monitor], precision=16,
-                                             # gradient_clip_val=1.0,
-                                             check_val_every_n_epoch=args.eval_every)
+    # if args.model == 'vgg16':
+    trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
+                                         callbacks=[checkpoint_callback, lr_monitor], precision=16,
+                                         gradient_clip_val=1.0,
+                                         check_val_every_n_epoch=args.eval_every)
+    # else:
+    #     trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
+    #                                          callbacks=[checkpoint_callback, lr_monitor], precision=16,
+    #                                          # gradient_clip_val=1.0,
+    #                                      check_val_every_n_epoch=args.eval_every)
 
     trainer.fit(model, train_dataloader, val_dataloader)

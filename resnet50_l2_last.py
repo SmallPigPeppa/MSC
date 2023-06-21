@@ -55,7 +55,6 @@ class ResNet50_L2(LightningModule):
         mid_imgs = F.interpolate(imgs, size=self.mid_size, mode='bilinear')
         large_imgs = F.interpolate(imgs, size=self.large_size, mode='bilinear')
 
-
         z1 = self.small_net(small_imgs)
         z2 = self.mid_net(mid_imgs)
         z3 = self.large_net(large_imgs)
@@ -68,6 +67,29 @@ class ResNet50_L2(LightningModule):
         y3 = self.unified_net(z3)
 
         return z1, z2, z3, y1, y2, y3
+
+    def forward_32(self, imgs):
+        small_imgs = F.interpolate(imgs, size=self.small_size, mode='bilinear')
+        z1 = self.small_net(small_imgs)
+        z1 = F.interpolate(z1, size=self.unified_size, mode='bilinear')
+        y1 = self.unified_net(z1)
+
+        return y1
+
+    def forward_128(self, imgs):
+        mid_imgs = F.interpolate(imgs, size=self.mid_size, mode='bilinear')
+        z2 = self.mid_net(mid_imgs)
+        z2 = F.interpolate(z2, size=self.unified_size, mode='bilinear')
+        y2 = self.unified_net(z2)
+
+        return y2
+
+    def forward_224(self, imgs):
+        large_imgs = F.interpolate(imgs, size=self.large_size, mode='bilinear')
+        z3 = self.large_net(large_imgs)
+        y3 = self.unified_net(z3)
+
+        return y3
 
 
 class ResNet50(LightningModule):
@@ -159,7 +181,8 @@ if __name__ == "__main__":
     args = parse_args()
     pl.seed_everything(19)
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
-    checkpoint_callback = ModelCheckpoint(monitor="val_acc3", mode="max", dirpath=args.checkpoint_dir, save_top_k=1,save_last=True)
+    checkpoint_callback = ModelCheckpoint(monitor="val_acc3", mode="max", dirpath=args.checkpoint_dir, save_top_k=1,
+                                          save_last=True)
     wandb_logger = WandbLogger(name=args.run_name, project=args.project, entity=args.entity, offline=args.offline)
     model = ResNet50(args)
 
