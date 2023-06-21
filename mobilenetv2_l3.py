@@ -58,6 +58,29 @@ class MobileNetV2_L3(nn.Module):
 
         return z1, z2, z3, y1, y2, y3
 
+    def forward_32(self, imgs):
+        small_imgs = F.interpolate(imgs, size=self.small_size, mode='bilinear')
+        z1 = self.small_net(small_imgs)
+        z1 = F.interpolate(z1, size=self.unified_size, mode='bilinear')
+        y1 = self.unified_net(z1)
+
+        return y1
+
+    def forward_128(self, imgs):
+        mid_imgs = F.interpolate(imgs, size=self.mid_size, mode='bilinear')
+        z2 = self.mid_net(mid_imgs)
+        z2 = F.interpolate(z2, size=self.unified_size, mode='bilinear')
+        y2 = self.unified_net(z2)
+
+        return y2
+
+    def forward_224(self, imgs):
+        large_imgs = F.interpolate(imgs, size=self.large_size, mode='bilinear')
+        z3 = self.large_net(large_imgs)
+        y3 = self.unified_net(z3)
+
+        return y3
+
 
 class MSC(LightningModule):
     def __init__(self, args):

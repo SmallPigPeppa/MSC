@@ -16,6 +16,9 @@ from transfer_dataset import *
 # from mstrain.vgg16_bn import VGG16_L2
 # from mstrain.mobilenetv2 import MobileNetV2_L3
 from resnet50_l2_last import ResNet50_L2
+from densenet121_l2_seprate_trans import DenseNet121_L2
+from vgg16_l3 import VGG16_L2
+from mobilenetv2_l3 import MobileNetV2_L3
 
 PRETRAINED = False
 
