@@ -323,7 +323,7 @@ def get_dtd(data_path):
             transforms.RandomResizedCrop(size=224, scale=(0.08, 1.0)),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
-            transforms.Normalize((0.4832, 0.4449, 0.3951), (0.2160, 0.2131, 0.2136)),
+            transforms.Normalize((0.5352, 0.4776, 0.4273), (0.1638, 0.1651, 0.1610)),
         ]
     )
     transform_test = transforms.Compose(
@@ -331,16 +331,16 @@ def get_dtd(data_path):
             transforms.Resize((256, 256)),
             transforms.CenterCrop(size=224),
             transforms.ToTensor(),
-            transforms.Normalize((0.4832, 0.4449, 0.3951), (0.2160, 0.2131, 0.2136)),
+            transforms.Normalize((0.5352, 0.4776, 0.4273), (0.1638, 0.1651, 0.1610)),
         ]
     )
     dataset_train = datasets.DTD(root=data_path, split='train', download=True, transform=transform_train)
     dataset_test = datasets.DTD(root=data_path, split='test', download=True, transform=transform_test)
-    mean_train, std_train = get_statistics(dataset_train)
-    mean_test, std_test = get_statistics(dataset_test)
-
-    print(f'Train dataset: mean={mean_train}, std={std_train}')
-    print(f'Test dataset: mean={mean_test}, std={std_test}')
+    # mean_train, std_train = get_statistics(dataset_train)
+    # mean_test, std_test = get_statistics(dataset_test)
+    #
+    # print(f'Train dataset: mean={mean_train}, std={std_train}')
+    # print(f'Test dataset: mean={mean_test}, std={std_test}')
     return dataset_train, dataset_test
 
 
@@ -350,7 +350,7 @@ def get_sun397(data_path):
             transforms.RandomResizedCrop(size=224, scale=(0.08, 1.0)),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
-            transforms.Normalize((0.4832, 0.4449, 0.3951), (0.2160, 0.2131, 0.2136)),
+            # transforms.Normalize((0.4832, 0.4449, 0.3951), (0.2160, 0.2131, 0.2136)),
         ]
     )
     transform_test = transforms.Compose(
@@ -358,11 +358,16 @@ def get_sun397(data_path):
             transforms.Resize((256, 256)),
             transforms.CenterCrop(size=224),
             transforms.ToTensor(),
-            transforms.Normalize((0.4832, 0.4449, 0.3951), (0.2160, 0.2131, 0.2136)),
+            # transforms.Normalize((0.4832, 0.4449, 0.3951), (0.2160, 0.2131, 0.2136)),
         ]
     )
     dataset_train = datasets.SUN397(root=data_path, download=True, transform=transform_train)
     dataset_test = datasets.SUN397(root=data_path, download=True, transform=transform_test)
+    mean_train, std_train = get_statistics(dataset_train)
+    mean_test, std_test = get_statistics(dataset_test)
+
+    print(f'Train dataset: mean={mean_train}, std={std_train}')
+    print(f'Test dataset: mean={mean_test}, std={std_test}')
     return dataset_train, dataset_test
 
 
@@ -372,7 +377,7 @@ def get_sun397(data_path):
 if __name__ == '__main__':
     # a, b = get_caltech101(data_path='/Users/lwz/torch_ds')
     # c, d = len(a), len(b)
-    a, b = get_aircraft(data_path='/Users/lwz/torch_ds')
+    a, b = get_sun397(data_path='/Users/lwz/torch_ds')
     c, d = len(a), len(b)
     # # a, b = get_cars(data_path='/Users/lwz/torch_ds')
     # a, b = get_aircraft(data_path='/Users/lwz/torch_ds')
