@@ -46,25 +46,27 @@ class MSC(LightningModule):
         elif self.args.model == 'vgg16':
             dropout = 0.5
             num_classes = args.num_classes
+            num_features = 512 * 7 * 7
             self.model.classifier = nn.Identity()
-            self.classifier = nn.Sequential(
-                nn.Linear(512 * 7 * 7, 4096),
-                nn.ReLU(True),
-                nn.Dropout(p=dropout),
-                nn.Linear(4096, 4096),
-                nn.ReLU(True),
-                nn.Dropout(p=dropout),
-                nn.Linear(4096, num_classes),
-            )
+            self.classifier = nn.Linear(num_features, num_classes)
+            # self.classifier = nn.Sequential(
+            #     nn.Linear(512 * 7 * 7, 4096),
+            #     nn.ReLU(True),
+            #     nn.Dropout(p=dropout),
+            #     nn.Linear(4096, 4096),
+            #     nn.ReLU(True),
+            #     nn.Dropout(p=dropout),
+            #     nn.Linear(4096, num_classes),
+            # )
         elif self.args.model == 'mobilenetv2':
             dropout = 0.2
             num_classes = args.num_classes
             num_features = self.model.last_channel
             self.model.classifier = nn.Identity()
-            self.classifier = nn.Sequential(
-                nn.Dropout(p=dropout),
-                nn.Linear(num_features, num_classes),
-            )
+            self.classifier = nn.Linear(num_features, num_classes)
+            # self.classifier = nn.Sequential(
+            #     nn.Dropout(p=dropout),
+            #     nn.Linear(num_features, num_classes),
 
     def forward(self, x):
         x = F.interpolate(x, size=224, mode='bilinear')
