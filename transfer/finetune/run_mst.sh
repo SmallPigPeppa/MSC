@@ -34,7 +34,7 @@ for dataset in "${datasets[@]}"; do
         CUDA_VISIBLE_DEVICES=$gpu /root/miniconda3/envs/solo-learn/bin/python $script \
             --num_gpus 2 \
             --weight_decay 2e-5 \
-            --project msc-transfer-linear-clip \
+            --project msc-transfer-finetune \
             --num_workers 8 \
             --batch_size 32 \
             --dataset_path /mnt/mmtech01/usr/liuwenzhuo/torch_ds/ \
