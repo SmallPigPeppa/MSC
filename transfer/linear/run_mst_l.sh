@@ -28,7 +28,7 @@ for dataset in "${datasets[@]}"; do
     # 迭代不同的模型
     for model in "${!models[@]}"; do
         checkpoint=${models[$model]}
-        script="main_mst_L.py"
+        script="main_mst_l.py"
         gpu=${gpus[$model]}
         # 运行脚本
         CUDA_VISIBLE_DEVICES=$gpu /root/miniconda3/envs/solo-learn/bin/python $script \
