@@ -71,9 +71,13 @@ class MSC(LightningModule):
             )
 
     def forward(self, x):
-        x = F.interpolate(x, size=224, mode='bilinear')
         with torch.no_grad():
-            z = self.model.unified_net(x)
+            if args.imagesize == 224:
+                z = self.model.forward_224(x)
+            elif args.imagesize in [128, 96, 64]:
+                z = self.model.forward_128(x)
+            elif args.imagesize in [32, 28]:
+                z = self.model.forward_32(x)
         y = self.classifier(z)
         return y
 
@@ -167,6 +171,14 @@ if __name__ == "__main__":
         dataset_train, dataset_test = get_rafdb(data_path=args.dataset_path)
         args.num_classes = 7
         args.imagesize = 32
+    if args.dataset=='dtd':
+        dataset_train, dataset_test = get_dtd(data_path=args.dataset_path)
+        args.num_classes = 47
+        args.imagesize = 224
+    if args.dataset=='sun397':
+        dataset_train, dataset_test = get_sun397(data_path=args.dataset_path)
+        args.num_classes = 397
+        args.imagesize = 224
 
     train_dataloader = DataLoader(dataset_train, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
     val_dataloader = DataLoader(dataset_test, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
