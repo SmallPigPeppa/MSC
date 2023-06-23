@@ -55,26 +55,26 @@ class MSC(LightningModule):
             num_features = 512 * 7 * 7
             num_classes = args.num_classes
             self.model.unified_net.classifier = nn.Identity()
-            self.classifier = nn.Linear(num_features, num_classes)
-            # self.classifier = nn.Sequential(
-            #     nn.Linear(512 * 7 * 7, 4096),
-            #     nn.ReLU(True),
-            #     nn.Dropout(p=dropout),
-            #     nn.Linear(4096, 4096),
-            #     nn.ReLU(True),
-            #     nn.Dropout(p=dropout),
-            #     nn.Linear(4096, num_classes),
-            # )
+            # self.classifier = nn.Linear(num_features, num_classes)
+            self.classifier = nn.Sequential(
+                nn.Linear(512 * 7 * 7, 4096),
+                nn.ReLU(True),
+                nn.Dropout(p=dropout),
+                nn.Linear(4096, 4096),
+                nn.ReLU(True),
+                nn.Dropout(p=dropout),
+                nn.Linear(4096, num_classes),
+            )
         elif self.args.model == 'mobilenetv2':
             dropout = 0.2
             num_classes = args.num_classes
             num_features = self.model.unified_net.last_channel
             self.model.unified_net.classifier = nn.Identity()
-            self.classifier = nn.Linear(num_features, num_classes)
-            # self.classifier = nn.Sequential(
-            #     nn.Dropout(p=dropout),
-            #     nn.Linear(num_features, num_classes),
-            # )
+            # self.classifier = nn.Linear(num_features, num_classes)
+            self.classifier = nn.Sequential(
+                nn.Dropout(p=dropout),
+                nn.Linear(num_features, num_classes),
+            )
 
     def forward(self, x):
         # with torch.no_grad():
