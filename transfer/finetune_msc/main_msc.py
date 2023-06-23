@@ -77,16 +77,16 @@ class MSC(LightningModule):
             # )
 
     def forward(self, x):
-        with torch.no_grad():
-            if args.imagesize == 224:
-                # print('############################# 224 #############################')
-                z = self.model.forward_224(x)
-            elif args.imagesize in [128, 96, 64]:
-                # print('############################# 128 #############################')
-                z = self.model.forward_128(x)
-            elif args.imagesize in [32, 28]:
-                # print('############################# 32 #############################')
-                z = self.model.forward_32(x)
+        # with torch.no_grad():
+        if args.imagesize == 224:
+            # print('############################# 224 #############################')
+            z = self.model.forward_224(x)
+        elif args.imagesize in [128, 96, 64]:
+            # print('############################# 128 #############################')
+            z = self.model.forward_128(x)
+        elif args.imagesize in [32, 28]:
+            # print('############################# 32 #############################')
+            z = self.model.forward_32(x)
         y = self.classifier(z)
         return y
 
