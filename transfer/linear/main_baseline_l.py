@@ -132,7 +132,7 @@ if __name__ == "__main__":
     pl.seed_everything(19)
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
     checkpoint_callback = ModelCheckpoint(dirpath=args.checkpoint_dir, save_last=True)
-    wandb_logger = WandbLogger(name=f"{args.run_name}-{args.model}-{args.dataset}-l", project=args.project,
+    wandb_logger = WandbLogger(name=f"{args.run_name}-{args.model}-{args.dataset}", project=args.project,
                                entity=args.entity,
                                offline=args.offline)
 
