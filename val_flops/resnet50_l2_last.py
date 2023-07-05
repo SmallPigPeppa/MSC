@@ -189,3 +189,4 @@ if __name__ == "__main__":
     model.eval()
     macs = profile_macs(model, inputs)
     flops = macs / 1e9
+    print(f"FLOPs:{flops}")
