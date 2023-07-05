@@ -182,7 +182,7 @@ if __name__ == "__main__":
     args = parse_args()
     wandb_logger = WandbLogger(name=args.run_name, project=args.project, entity=args.entity, offline=args.offline)
     model = ResNet50(args)
-    inputs = torch.rand([8, 224, 224, 3])
+    inputs = torch.rand([8, 3, 224, 224])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     inputs, targets = inputs.to(device)
     macs = profile_macs(model, inputs)
