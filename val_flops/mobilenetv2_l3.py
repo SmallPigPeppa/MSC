@@ -41,22 +41,22 @@ class MobileNetV2_L3(nn.Module):
         self.unified_size = (14, 14)
 
     def forward(self, imgs):
-        small_imgs = F.interpolate(imgs, size=self.small_size, mode='bilinear')
-        # mid_imgs = F.interpolate(imgs, size=self.mid_size, mode='bilinear')
+        # small_imgs = F.interpolate(imgs, size=self.small_size, mode='bilinear')
+        mid_imgs = F.interpolate(imgs, size=self.mid_size, mode='bilinear')
         # large_imgs = F.interpolate(imgs, size=self.large_size, mode='bilinear')
 
-        z1 = self.small_net(small_imgs)
-        # z2 = self.mid_net(mid_imgs)
+        # z1 = self.small_net(small_imgs)
+        z2 = self.mid_net(mid_imgs)
         # z3 = self.large_net(large_imgs)
 
-        z1 = F.interpolate(z1, size=self.unified_size, mode='bilinear')
-        # z2 = F.interpolate(z2, size=self.unified_size, mode='bilinear')
+        # z1 = F.interpolate(z1, size=self.unified_size, mode='bilinear')
+        z2 = F.interpolate(z2, size=self.unified_size, mode='bilinear')
 
-        y1 = self.unified_net(z1)
-        # y2 = self.unified_net(z2)
+        # y1 = self.unified_net(z1)
+        y2 = self.unified_net(z2)
         # y3 = self.unified_net(z3)
 
-        return z1, y1
+        return z2, y2
 
     def forward_32(self, imgs):
         small_imgs = F.interpolate(imgs, size=self.small_size, mode='bilinear')
