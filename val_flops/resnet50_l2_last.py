@@ -86,8 +86,8 @@ class ResNet50_L2(LightningModule):
         return y2
 
     def forward_224(self, imgs):
-        large_imgs = F.interpolate(imgs, size=self.large_size, mode='bilinear')
-        z3 = self.large_net(large_imgs)
+        # large_imgs = F.interpolate(imgs, size=self.large_size, mode='bilinear')
+        z3 = self.large_net(imgs)
         y3 = self.unified_net(z3)
 
         return y3
@@ -103,7 +103,7 @@ class ResNet50(LightningModule):
         self.metrics_acc = torchmetrics.Accuracy()
 
     def forward(self, x):
-        return self.model.forward_128(x)
+        return self.model.forward_224(x)
 
     def share_step(self, batch, batch_idx):
         x, y = batch
@@ -182,7 +182,7 @@ if __name__ == "__main__":
     args = parse_args()
     # wandb_logger = WandbLogger(name=args.run_name, project=args.project, entity=args.entity, offline=args.offline)
     model = ResNet50(args)
-    inputs = torch.rand([8, 3, 128, 128])
+    inputs = torch.rand([8, 3, 224, 224])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     inputs = inputs.to(device)
     model = model.to(device)
