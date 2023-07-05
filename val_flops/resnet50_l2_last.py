@@ -185,5 +185,7 @@ if __name__ == "__main__":
     inputs = torch.rand([8, 3, 224, 224])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     inputs = inputs.to(device)
+    model = model.to(device)
+    model.eval()
     macs = profile_macs(model, inputs)
     flops = macs / 1e9
