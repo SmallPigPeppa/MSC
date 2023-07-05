@@ -103,7 +103,7 @@ class ResNet50(LightningModule):
         self.metrics_acc = torchmetrics.Accuracy()
 
     def forward(self, x):
-        return self.model.forward_32(x)
+        return self.model.forward_128(x)
 
     def share_step(self, batch, batch_idx):
         x, y = batch
