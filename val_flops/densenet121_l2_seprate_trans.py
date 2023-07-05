@@ -194,8 +194,8 @@ if __name__ == "__main__":
     from torchprofile import profile_macs
 
     model = MSC(args)
-    # model = resnet50()
-    inputs = torch.rand([8, 3, 224, 224])
+    model = resnet50()
+    inputs = torch.rand([8, 3, 128, 128])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     inputs = inputs.to(device)
     model = model.to(device)
