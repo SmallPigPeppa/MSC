@@ -149,11 +149,12 @@ class MSC(LightningModule):
 if __name__ == "__main__":
     args = parse_args()
     # wandb_logger = WandbLogger(name=args.run_name, project=args.project, entity=args.entity, offline=args.offline)
-    from torchvision.models import resnet50
+    from torchvision.models import resnet50, vgg16_bn
     from torchprofile import profile_macs
 
     model = MSC(args)
     # model = resnet50()
+    model = vgg16_bn()
     inputs = torch.rand([8, 3, 224, 224])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     inputs = inputs.to(device)
