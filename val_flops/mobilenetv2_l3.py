@@ -53,7 +53,7 @@ class MobileNetV2_L3(nn.Module):
         # z2 = F.interpolate(z2, size=self.unified_size, mode='bilinear')
 
         y1 = self.unified_net(z1)
-        y2 = self.unified_net(z2)
+        # y2 = self.unified_net(z2)
         # y3 = self.unified_net(z3)
 
         return z1, y1
