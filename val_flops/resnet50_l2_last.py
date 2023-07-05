@@ -181,7 +181,10 @@ class ResNet50(LightningModule):
 if __name__ == "__main__":
     args = parse_args()
     # wandb_logger = WandbLogger(name=args.run_name, project=args.project, entity=args.entity, offline=args.offline)
-    model = ResNet50(args)
+    from torchvision.models import resnet50
+
+    # model = ResNet50(args)
+    model = resnet50()
     inputs = torch.rand([8, 3, 224, 224])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     inputs = inputs.to(device)
