@@ -42,21 +42,21 @@ class MobileNetV2_L3(nn.Module):
 
     def forward(self, imgs):
         small_imgs = F.interpolate(imgs, size=self.small_size, mode='bilinear')
-        mid_imgs = F.interpolate(imgs, size=self.mid_size, mode='bilinear')
-        large_imgs = F.interpolate(imgs, size=self.large_size, mode='bilinear')
+        # mid_imgs = F.interpolate(imgs, size=self.mid_size, mode='bilinear')
+        # large_imgs = F.interpolate(imgs, size=self.large_size, mode='bilinear')
 
         z1 = self.small_net(small_imgs)
-        z2 = self.mid_net(mid_imgs)
-        z3 = self.large_net(large_imgs)
+        # z2 = self.mid_net(mid_imgs)
+        # z3 = self.large_net(large_imgs)
 
         z1 = F.interpolate(z1, size=self.unified_size, mode='bilinear')
-        z2 = F.interpolate(z2, size=self.unified_size, mode='bilinear')
+        # z2 = F.interpolate(z2, size=self.unified_size, mode='bilinear')
 
         y1 = self.unified_net(z1)
         y2 = self.unified_net(z2)
-        y3 = self.unified_net(z3)
+        # y3 = self.unified_net(z3)
 
-        return z1, z2, z3, y1, y2, y3
+        return z1, y1
 
     def forward_32(self, imgs):
         small_imgs = F.interpolate(imgs, size=self.small_size, mode='bilinear')
@@ -168,46 +168,20 @@ class MSC(LightningModule):
 
 if __name__ == "__main__":
     args = parse_args()
-    pl.seed_everything(19)
-    lr_monitor = LearningRateMonitor(logging_interval="epoch")
-    checkpoint_callback = ModelCheckpoint(monitor="val_acc3", mode="max", dirpath=args.checkpoint_dir, save_top_k=1,save_last=True)
-    wandb_logger = WandbLogger(name=f"{args.run_name}_trunc:{args.trunc}", project=args.project, entity=args.entity, offline=args.offline)
+    # wandb_logger = WandbLogger(name=args.run_name, project=args.project, entity=args.entity, offline=args.offline)
+    from torchvision.models import resnet50, vgg16_bn
+    from torchprofile import profile_macs
+
     model = MSC(args)
-
-    if args.resume_from_checkpoint is not None:
-        trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
-                                             callbacks=[checkpoint_callback, lr_monitor],
-                                             resume_from_checkpoint=args.resume_from_checkpoint, precision=16,
-                                             gradient_clip_val=1.0,
-                                             check_val_every_n_epoch=args.eval_every)
-    else:
-        trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
-                                             callbacks=[checkpoint_callback, lr_monitor], precision=16,
-                                             gradient_clip_val=1.0,
-                                             check_val_every_n_epoch=args.eval_every)
-
-    try:
-        from pytorch_lightning.loops import FitLoop
-
-
-        class WorkaroundFitLoop(FitLoop):
-            @property
-            def prefetch_batches(self) -> int:
-                return 1
-
-
-        trainer.fit_loop = WorkaroundFitLoop(
-            trainer.fit_loop.min_epochs, trainer.fit_loop.max_epochs
-        )
-    except:
-        pass
-
-    dali_datamodule = ClassificationDALIDataModule(
-        train_data_path=os.path.join(args.dataset_path, 'train'),
-        val_data_path=os.path.join(args.dataset_path, 'val'),
-        num_workers=args.num_workers,
-        batch_size=args.batch_size)
-
-    trainer.fit(model, datamodule=dali_datamodule)
+    # model = resnet50()
+    # model = vgg16_bn()
+    inputs = torch.rand([8, 3, 224, 224])
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    inputs = inputs.to(device)
+    model = model.to(device)
+    model.eval()
+    macs = profile_macs(model, inputs)
+    flops = macs / 1e9
+    print(f"FLOPs:{flops}")
 
 
