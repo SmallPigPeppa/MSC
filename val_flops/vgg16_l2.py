@@ -10,8 +10,10 @@ from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 from imagenet_dali import ClassificationDALIDataModule
 from args import parse_args
 import pytorch_lightning as pl
-from torchvision.models import vgg16,densenet121,inception_v3,mobilenetv2
-PRETRAINED=False
+from torchvision.models import vgg16, densenet121, inception_v3, mobilenetv2
+
+PRETRAINED = False
+
 
 def unified_net():
     u_net = vgg16(pretrained=PRETRAINED)
@@ -19,9 +21,10 @@ def unified_net():
         u_net.features[i] = nn.Identity()
     return u_net
 
+
 def sub_net():
     u_net = vgg16(pretrained=PRETRAINED)
-    sub_net_list=[]
+    sub_net_list = []
     for i in range(10):
         sub_net_list.append(u_net.features[i])
     return nn.Sequential(*sub_net_list)
@@ -135,6 +138,7 @@ class MSC(LightningModule):
         )
         return [optimizer], [scheduler]
 
+
 # if __name__=="__main__":
 #     a=torch.rand(8,3,224,224)
 #     model=VGG16_L2()
@@ -158,5 +162,3 @@ if __name__ == "__main__":
     macs = profile_macs(model, inputs)
     flops = macs / 1e9
     print(f"FLOPs:{flops}")
-
-
