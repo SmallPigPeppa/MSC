@@ -6,13 +6,13 @@ import torch.nn as nn
 def test_resolutions():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = torchvision.models.resnet50(pretrained=False)
-    model.conv1 = nn.Conv2d(
-        3, 64, kernel_size=3, stride=1, padding=2, bias=False
-    )
-    model.maxpool = nn.Identity()
+    # model.conv1 = nn.Conv2d(
+    #     3, 64, kernel_size=3, stride=1, padding=2, bias=False
+    # )
+    # model.maxpool = nn.Identity()
     model = model.to(device)
     model.eval()
-    inputs = torch.rand(256, 3, 32, 32).to(device)
+    inputs = torch.rand(256, 3, 224, 224).to(device)
     macs = profile_macs(model, inputs)
     flops = macs / 1e9
     print(f"FLOPs:{flops}")
