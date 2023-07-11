@@ -9,7 +9,7 @@ import pytorch_lightning as pl
 from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
-from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
+# from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 from torch.optim.lr_scheduler import StepLR
 from args import parse_args
 import torch.nn.functional as F
@@ -177,24 +177,33 @@ class ResNet50(LightningModule):
         dataset = torchvision.datasets.ImageFolder(os.path.join(self.dataset_path, "val"), transform=transform)
         return torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, num_workers=8, pin_memory=True)
 
-
 if __name__ == "__main__":
-    args = parse_args()
-    pl.seed_everything(19)
-    lr_monitor = LearningRateMonitor(logging_interval="epoch")
-    checkpoint_callback = ModelCheckpoint(monitor="val_acc3", mode="min", dirpath=args.checkpoint_dir, save_top_k=1)
-    wandb_logger = WandbLogger(name=args.run_name, project=args.project, entity=args.entity, offline=args.offline)
-    model = ResNet50(args.max_epochs, args.learning_rate, args.batch_size, args.weight_decay, args.dataset_path)
+    def count_parameters(model):
+        total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        total_params_millions = total_params / 1e6
+        return round(total_params_millions, 2)
 
-    if args.resume_from_checkpoint is not None:
-        trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
-                                             callbacks=[checkpoint_callback, lr_monitor],
-                                             resume_from_checkpoint=args.resume_from_checkpoint, precision=16,gradient_clip_val=1.0,
-                                             check_val_every_n_epoch=args.eval_every)
-    else:
-        trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
-                                             callbacks=[checkpoint_callback, lr_monitor], precision=16,gradient_clip_val=1.0,
-                                             check_val_every_n_epoch=args.eval_every)
 
-    trainer.fit(model)
+    model = MultiScaleNet()  # 创建你的模型
+    print(f'The model has {count_parameters(model):,} trainable parameters')
 
+# if __name__ == "__main__":
+#     args = parse_args()
+#     pl.seed_everything(19)
+#     lr_monitor = LearningRateMonitor(logging_interval="epoch")
+#     checkpoint_callback = ModelCheckpoint(monitor="val_acc3", mode="min", dirpath=args.checkpoint_dir, save_top_k=1)
+#     wandb_logger = WandbLogger(name=args.run_name, project=args.project, entity=args.entity, offline=args.offline)
+#     model = ResNet50(args.max_epochs, args.learning_rate, args.batch_size, args.weight_decay, args.dataset_path)
+#
+#     if args.resume_from_checkpoint is not None:
+#         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
+#                                              callbacks=[checkpoint_callback, lr_monitor],
+#                                              resume_from_checkpoint=args.resume_from_checkpoint, precision=16,gradient_clip_val=1.0,
+#                                              check_val_every_n_epoch=args.eval_every)
+#     else:
+#         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
+#                                              callbacks=[checkpoint_callback, lr_monitor], precision=16,gradient_clip_val=1.0,
+#                                              check_val_every_n_epoch=args.eval_every)
+#
+#     trainer.fit(model)
+#

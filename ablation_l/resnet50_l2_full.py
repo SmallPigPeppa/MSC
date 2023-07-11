@@ -13,6 +13,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from torch.optim.lr_scheduler import StepLR
 from args import parse_args
 import torch.nn.functional as F
+from torchvision.models import resnet50
 
 
 def unified_net():
@@ -21,6 +22,7 @@ def unified_net():
     u_net.bn1 = nn.Identity()
     u_net.relu = nn.Identity()
     u_net.maxpool = nn.Identity()
+    u_net.layer1 = nn.Identity()
     return u_net
 
 
@@ -31,20 +33,22 @@ class MultiScaleNet(nn.Module):
             nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),resnet50(pretrained=False).layer1
         )
         self.mid_net = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=5, stride=1, padding=2, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),resnet50(pretrained=False).layer1
         )
         self.small_net = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=2, bias=False),
             nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=True),resnet50(pretrained=False).layer1
         )
         self.unified_net = unified_net()
+        self.unified_net1 = unified_net()
+        self.unified_net2 = unified_net()
         self.small_size = (32, 32)
         self.mid_size = (128, 128)
         self.large_size = (224, 224)
@@ -53,7 +57,7 @@ class MultiScaleNet(nn.Module):
     def forward(self, imgs):
         small_imgs = F.interpolate(imgs, size=self.small_size, mode='bilinear')
         mid_imgs = F.interpolate(imgs, size=self.mid_size, mode='bilinear')
-        large_imgs = imgs
+        large_imgs = F.interpolate(imgs, size=self.large_size, mode='bilinear')
 
         z1 = self.small_net(small_imgs)
         z2 = self.mid_net(mid_imgs)
@@ -136,12 +140,11 @@ class ResNet50(LightningModule):
     def validation_step(self, batch, batch_idx):
         result_dict = self.share_step(batch, batch_idx)
         val_result_dict = {f'val_{k}': v for k, v in result_dict.items()}
-        self.log_dict(val_result_dict, on_epoch=True)
+        self.log_dict(val_result_dict,on_epoch=True)
         return val_result_dict
 
     def configure_optimizers(self):
-        optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay,
-                                    momentum=0.9)
+        optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay,momentum=0.9)
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
             warmup_epochs=5,
@@ -175,7 +178,6 @@ class ResNet50(LightningModule):
         dataset = torchvision.datasets.ImageFolder(os.path.join(self.dataset_path, "val"), transform=transform)
         return torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, num_workers=8, pin_memory=True)
 
-
 if __name__ == "__main__":
     def count_parameters(model):
         total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -185,7 +187,7 @@ if __name__ == "__main__":
 
     model = MultiScaleNet()  # 创建你的模型
     print(f'The model has {count_parameters(model):,} trainable parameters')
-#
+
 # if __name__ == "__main__":
 #     args = parse_args()
 #     pl.seed_everything(19)
@@ -197,13 +199,12 @@ if __name__ == "__main__":
 #     if args.resume_from_checkpoint is not None:
 #         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
 #                                              callbacks=[checkpoint_callback, lr_monitor],
-#                                              resume_from_checkpoint=args.resume_from_checkpoint, precision=16,
-#                                              gradient_clip_val=0.5,
+#                                              resume_from_checkpoint=args.resume_from_checkpoint, precision=16,gradient_clip_val=0.5,
 #                                              check_val_every_n_epoch=args.eval_every)
 #     else:
 #         trainer = Trainer.from_argparse_args(args, gpus=args.num_gpus, accelerator="ddp", logger=wandb_logger,
-#                                              callbacks=[checkpoint_callback, lr_monitor], precision=16,
-#                                              gradient_clip_val=0.5,
+#                                              callbacks=[checkpoint_callback, lr_monitor], precision=16,gradient_clip_val=0.5,
 #                                              check_val_every_n_epoch=args.eval_every)
 #
 #     trainer.fit(model)
+#
