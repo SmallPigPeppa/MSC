@@ -8,7 +8,7 @@ def test_resolutions():
     model = torchvision.models.resnet50(pretrained=False)
     model = model.to(device)
     model.eval()
-    inputs = torch.rand(4, 3, 224, 224).to(device)
+    inputs = torch.rand(256, 3, 224, 224).to(device)
     macs = profile_macs(model, inputs)
     flops = macs / 1e9
     print(f"FLOPs:{flops}")
