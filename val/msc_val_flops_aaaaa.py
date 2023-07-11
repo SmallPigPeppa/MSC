@@ -3,7 +3,7 @@ from torchprofile import profile_macs
 import torchvision
 
 
-def test_resolutions(model, dataset_path, resolutions):
+def test_resolutions():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = torchvision.models.resnet50(pretrained=False)
     model = model.to(device)
